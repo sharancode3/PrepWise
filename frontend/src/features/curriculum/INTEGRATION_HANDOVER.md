@@ -36,11 +36,14 @@ The prototype delivers a fully interactive, production-styled single-page curric
    - Validation requires at least one topic or resource before proceeding.
    - Confirmation review screen provides crisp verification of project, topics, resources, verbatim request, and unresolved items, with non-destructive back navigation.
 
-5. **Vertical Study Timeline Preview:**
-   - Continuous vertical guide line (`.timeline-line`) with circular step markers (`.timeline-node`).
-   - Renders Scheduled Day (`Day 1`–`Day 5`), Activity Badges (`learn`, `practice`, `check`), Durations, Topic titles, and Resource pills.
-   - Expandable disclosure details actionable session steps and expected learning outcomes from the verified fixture.
-   - Keyboard-accessible checkboxes toggle session completion and update dynamic counters in real time.
+5. **Horizontal Study Checklist (Milestone Layout Reference):**
+   - Implements the structural checklist reference: one continuous horizontal rail running from a **0%** start marker to a **100%** complete marker.
+   - Chronological study sessions drop downward with thin vertical connectors of **staggered lengths** (e.g. 96px, 44px, 108px, 48px) creating visual rhythm and preventing label collisions.
+   - Small circular markers at connector ends receive highlighted visual states upon completion.
+   - Milestone cards beneath each marker feature accessible completion checkboxes, concise activity titles, scheduled dates (`Day 1`), durations (`15m`), and kind badges (`learn`, `practice`, `check`).
+   - Honest metric: Labeled strictly **“Sessions completed”** (e.g. *3 of 7 sessions completed (43%)*) with an explicit disclaimer noting it reflects checklist tracking only and does not claim subject mastery.
+   - Interactive Session Inspector: Clicking any milestone card opens an actionable inspection drawer revealing full session steps, expected learning outcomes, and linked study resources.
+   - Responsive horizontal scrolling with comfortable milestone widths (`min-width: 200px`) preventing awkward text wrapping or shrinking on smaller screens.
    - Deterministic test error toggle exercises recoverable network failure states and alert dismissal.
 
 6. **Interactive Simulated Replan Flow:**

@@ -958,291 +958,407 @@
   border: 1px solid var(--dp-color-rule);
 }
 
-/* Vertical Timeline Track & Node Elements */
-.vertical-timeline {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  margin-top: 8px;
-}
+/* ============================================================ */
+/* HORIZONTAL STUDY CHECKLIST (Layout Reference Implementation) */
+/* ============================================================ */
 
-.timeline-item {
-  display: flex;
-  align-items: flex-start;
-  position: relative;
-  padding-bottom: 24px;
-  gap: 20px;
-}
-
-.timeline-item:last-child {
-  padding-bottom: 0;
-}
-
-/* Continuous Vertical Guide Line */
-.timeline-line {
-  position: absolute;
-  top: 36px;
-  bottom: 0;
-  left: 17px;
-  width: 2px;
-  background: var(--dp-color-rule);
-  z-index: 1;
-}
-
-.timeline-item.is-completed .timeline-line {
-  background: #c3e6cb;
-}
-
-/* Left Column: Circular Node & Accessible Checkbox */
-.timeline-left-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  z-index: 2;
-  width: 36px;
-  flex-shrink: 0;
-}
-
-.timeline-node {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid var(--dp-color-rule);
+.checklist-scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 24px 20px 28px;
   background: var(--dp-color-panel);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--dp-color-ink);
-  transition: all var(--dp-motion-interaction) var(--dp-motion-easing);
+  border-radius: var(--dp-radius-panel);
+  border: 1px solid var(--dp-color-rule);
+  margin-top: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.timeline-node.node-completed {
-  background: #1a7f37;
-  border-color: #1a7f37;
-  color: #ffffff;
-}
-
-.node-num {
-  font-size: 12px;
-}
-
-.timeline-checkbox-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-}
-
-.timeline-checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #1a7f37;
-}
-
-.timeline-checkbox:focus-visible {
+.checklist-scroll-container:focus-visible {
   outline: 2px solid var(--dp-color-accent);
   outline-offset: 2px;
 }
 
-/* Right Column: Session Details Card */
-.timeline-card {
-  flex: 1;
-  border-radius: 8px;
-  border: 1px solid var(--dp-color-rule);
-  background: var(--dp-color-ground);
-  padding: 16px 20px;
+.checklist-diagram {
+  position: relative;
+  min-width: max-content;
+  padding-top: 30px;
+  padding-bottom: 8px;
+}
+
+/* Main Continuous Horizontal Guide Line across 0% to 100% */
+.checklist-horizontal-rail {
+  position: absolute;
+  top: 30px;
+  left: 45px;
+  right: 45px;
+  height: 3px;
+  background: var(--dp-color-rule);
+  z-index: 1;
+  border-radius: 2px;
+}
+
+.checklist-rail-progress {
+  height: 100%;
+  background: var(--dp-color-accent);
+  border-radius: 2px;
+  transition: width var(--dp-motion-interaction) var(--dp-motion-easing);
+}
+
+/* Columns Track */
+.checklist-columns-track {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  z-index: 2;
+  gap: 16px;
+}
+
+/* Base Column Structure */
+.checklist-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* 0% and 100% Endpoint Columns */
+.checklist-endpoint-col {
+  width: 90px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.checklist-endpoint-label {
+  font-family: 'Host Grotesk', var(--dp-typography-fallback);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--dp-color-ink);
+  margin-top: 18px;
+  letter-spacing: -0.02em;
+}
+
+.checklist-endpoint-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dp-color-ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* Milestone Columns (One per session) */
+.checklist-milestone-col {
+  width: 220px;
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+/* Vertical Staggered Connector extending downward from horizontal rail */
+.checklist-connector-vertical {
+  width: 2px;
+  background: var(--dp-color-rule);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  transition: background var(--dp-motion-interaction) var(--dp-motion-easing);
+}
+
+.checklist-connector-vertical.connector-completed {
+  background: var(--dp-color-accent);
+}
+
+/* Circular Marker Dot at Connector End */
+.checklist-marker-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--dp-color-rule);
+  background: var(--dp-color-panel);
+  position: absolute;
+  bottom: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dp-color-ink-secondary);
+  z-index: 3;
   transition: all var(--dp-motion-interaction) var(--dp-motion-easing);
 }
 
-.timeline-item.is-completed .timeline-card {
-  background: #fbfdfb;
-  border-color: #d1e7d2;
+.checklist-marker-dot.marker-completed {
+  border-color: var(--dp-color-accent);
+  background: var(--dp-color-accent);
+  color: var(--dp-color-on-accent);
 }
 
-.timeline-item.is-pending .timeline-card {
-  opacity: 0.65;
+.checklist-marker-dot.endpoint-dot {
+  width: 14px;
+  height: 14px;
+  bottom: -7px;
+  background: var(--dp-color-ink);
+  border-color: var(--dp-color-ink);
 }
 
-.timeline-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-  gap: 8px;
+.checklist-marker-dot.endpoint-dot.marker-completed {
+  background: var(--dp-color-accent);
+  border-color: var(--dp-color-accent);
+  color: var(--dp-color-on-accent);
 }
 
-.timeline-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+.marker-num {
+  font-size: 10px;
 }
 
-.timeline-day-pill {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--dp-color-ink);
-  background: var(--dp-color-ground-muted);
-  padding: 2px 8px;
-  border-radius: 4px;
+/* Milestone Card beneath the marker */
+.checklist-milestone-card {
+  margin-top: 18px;
+  width: 100%;
+  background: var(--dp-color-ground);
   border: 1px solid var(--dp-color-rule);
+  border-radius: 8px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all var(--dp-motion-interaction) var(--dp-motion-easing);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
 }
 
-.timeline-kind-badge {
+.checklist-milestone-card:hover {
+  border-color: var(--dp-color-accent);
+  background: var(--dp-color-panel);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.checklist-milestone-card.card-completed {
+  background: #f7faff;
+  border-color: #c4d7fe;
+}
+
+.checklist-milestone-card.card-selected {
+  border-color: var(--dp-color-accent);
+  box-shadow: 0 0 0 2px rgba(7, 76, 224, 0.18);
+  background: var(--dp-color-panel);
+}
+
+.milestone-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.milestone-checkbox-wrap {
+  cursor: pointer;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.milestone-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--dp-color-accent);
+}
+
+.milestone-checkbox:focus-visible {
+  outline: 2px solid var(--dp-color-accent);
+  outline-offset: 2px;
+}
+
+.milestone-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dp-color-ink);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.milestone-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.milestone-day-pill {
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: 4px;
+  background: var(--dp-color-ground-muted);
+  border: 1px solid var(--dp-color-rule);
+  color: var(--dp-color-ink);
 }
 
-.timeline-kind-badge.learn {
-  background: #eef3ff;
-  color: var(--dp-color-accent);
-}
-
-.timeline-kind-badge.practice {
-  background: #f3f0ff;
-  color: #633ec2;
-}
-
-.timeline-kind-badge.check {
-  background: #fff4e5;
-  color: #b25e00;
-}
-
-.timeline-duration-badge {
+.milestone-duration-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
+  gap: 3px;
+  font-size: 11px;
   color: var(--dp-color-ink-secondary);
   font-weight: 500;
 }
 
-.timeline-resource-pill {
+.milestone-kind-pill {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.milestone-kind-pill.learn {
+  background: #eef3ff;
+  color: var(--dp-color-accent);
+}
+
+.milestone-kind-pill.practice {
+  background: #f3f0ff;
+  color: #633ec2;
+}
+
+.milestone-kind-pill.check {
+  background: #fff4e5;
+  color: #b25e00;
+}
+
+.milestone-topic-name {
+  font-size: 12px;
+  color: var(--dp-color-ink-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.milestone-resource-tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  color: var(--dp-color-ink-secondary);
-  background: var(--dp-color-panel);
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid var(--dp-color-rule);
-}
-
-.timeline-version-tag {
   font-size: 11px;
   color: var(--dp-color-ink-secondary);
+  background: var(--dp-color-panel);
+  border: 1px solid var(--dp-color-rule);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.timeline-card-body {
-  margin-bottom: 8px;
+.milestone-resource-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.timeline-activity-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--dp-color-ink);
-  margin: 0 0 4px 0;
-}
-
-.timeline-item.is-completed .timeline-activity-title {
-  color: #1a7f37;
-}
-
-.timeline-topic-ref {
-  font-size: 13px;
-  color: var(--dp-color-ink-secondary);
-  margin-bottom: 6px;
-}
-
-.timeline-summary-text {
-  font-size: 13px;
-  color: var(--dp-color-ink);
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* Expandable Session Disclosure */
-.timeline-details-disclosure {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--dp-color-rule);
-}
-
-.timeline-details-summary {
+.milestone-inspect-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   color: var(--dp-color-accent);
   cursor: pointer;
-  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+  align-self: flex-start;
 }
 
-.timeline-details-summary:hover {
+.milestone-inspect-btn:hover {
   text-decoration: underline;
 }
 
-.timeline-disclosure-content {
+.checklist-scroll-notice {
+  display: none;
+  text-align: center;
+  font-size: 12px;
+  color: var(--dp-color-ink-secondary);
   margin-top: 10px;
-  padding: 12px 14px;
-  border-radius: 6px;
+}
+
+@media (max-width: 900px) {
+  .checklist-scroll-notice {
+    display: block;
+  }
+}
+
+/* ============================================================ */
+/* SESSION ACTIVITY INSPECTION PANEL */
+/* ============================================================ */
+
+.session-inspect-panel {
+  margin-top: 24px;
+  padding: 20px 24px;
+  border-radius: var(--dp-radius-panel);
+  border: 1px solid var(--dp-color-rule);
+  background: var(--dp-color-ground);
+  animation: fadeIn 160ms ease-out;
+}
+
+.session-inspect-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--dp-color-rule);
+  margin-bottom: 16px;
+}
+
+.session-inspect-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dp-color-ink);
+}
+
+.session-inspect-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+}
+
+@media (max-width: 800px) {
+  .session-inspect-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.session-inspect-topic {
+  font-size: 13px;
+  color: var(--dp-color-ink-secondary);
+  margin-bottom: 8px;
+}
+
+.session-inspect-summary {
+  font-size: 14px;
+  color: var(--dp-color-ink);
+  line-height: 1.55;
+  margin: 0 0 16px 0;
+}
+
+.session-steps-box {
+  padding: 14px 16px;
   background: var(--dp-color-panel);
   border: 1px solid var(--dp-color-rule);
+  border-radius: 8px;
 }
 
-.timeline-steps-list {
-  margin: 6px 0 0 18px;
-  padding: 0;
-  font-size: 13px;
-  color: var(--dp-color-ink);
-  line-height: 1.5;
-}
-
-.timeline-steps-list li {
-  margin-bottom: 4px;
-}
-
-.timeline-outcome-box {
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: #f0f7ff;
+.session-resource-card {
+  padding: 12px 14px;
+  background: var(--dp-color-panel);
   border: 1px solid #d0defe;
-  margin-top: 8px;
-}
-
-/* Mobile Layout Responsiveness */
-@media (max-width: 640px) {
-  .timeline-item {
-    gap: 12px;
-  }
-  .timeline-line {
-    left: 15px;
-  }
-  .timeline-left-col {
-    width: 30px;
-  }
-  .timeline-node {
-    width: 30px;
-    height: 30px;
-    font-size: 11px;
-  }
-  .timeline-card {
-    padding: 12px 14px;
-  }
-  .timeline-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  border-radius: 8px;
 }
 
 /* Version Selector in Timeline Summary Bar */

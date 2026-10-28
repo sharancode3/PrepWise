@@ -2,9 +2,9 @@ import { useState } from 'react'
 import {
   AlertTriangle,
   ArrowLeft,
-  Calendar,
   Check,
   CheckCircle2,
+  ChevronRight,
   Clock,
   FileText,
   Info,
@@ -12,6 +12,7 @@ import {
   Loader2,
   RefreshCw,
   Sparkles,
+  X,
 } from 'lucide-react'
 import { Button } from '../../components/ui'
 import { ReplanModal } from './ReplanModal'
@@ -27,9 +28,12 @@ export interface StudyTimelineProps {
   onSelectVersion?: (version: number) => void
   onToggleSession: (entryId: string, completed: boolean) => Promise<void>
   onReplanWithRequest?: (request: ReplanRequest) => Promise<void>
-  onSimulateReplan: () => Promise<void>
+  onSimulateReplan?: () => Promise<void>
   onBackToScope?: () => void
 }
+
+// Staggered connector lengths to produce the rhythm from the layout reference
+const STAGGER_CONNECTOR_HEIGHTS = [96, 44, 108, 48, 92, 44, 104, 48]
 
 export function StudyTimeline({
   plan,
@@ -44,6 +48,7 @@ export function StudyTimeline({
   onBackToScope,
 }: StudyTimelineProps) {
   const [pendingEntryId, setPendingEntryId] = useState<string | null>(null)
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null)
   const [isReplanModalOpen, setIsReplanModalOpen] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [simulateErrorActive, setSimulateErrorActive] = useState(
@@ -78,7 +83,7 @@ export function StudyTimeline({
         <Info size={32} className="timeline-empty-icon" aria-hidden="true" />
         <h3>No study sessions scheduled</h3>
         <p className="section-desc">
-          There are currently no sessions in this study plan. Return to study scope selection to select topics and generate your timeline.
+          There are currently no sessions in this study plan. Return to study scope selection to choose topics and generate your checklist.
         </p>
         {onBackToScope && (
           <Button variant="secondary" onClick={onBackToScope}>
@@ -99,6 +104,9 @@ export function StudyTimeline({
   const totalMinutes = plan.entries.reduce((sum, e) => sum + e.durationMinutes, 0)
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
+  // Active inspected session
+  const selectedEntry = plan.entries.find((e) => e.entryId === selectedEntryId) ?? null
+
   return (
     <div className="study-timeline-wrapper">
       {/* Navigation Header */}
@@ -117,20 +125,20 @@ export function StudyTimeline({
         </div>
       </div>
 
-      {/* Main Timeline Card */}
+      {/* Main Timeline / Checklist Card */}
       <div className="section-card timeline-main-card">
         {/* Timeline Header & Summary Bar */}
         <div className="timeline-summary-bar">
           <div className="timeline-summary-left">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h2 style={{ margin: 0, fontSize: 20 }}>Study timeline</h2>
+              <h2 style={{ margin: 0, fontSize: 20 }}>Study checklist</h2>
               <span className="timeline-version-pill">Plan v{plan.version}</span>
               <span className={`feasibility-pill ${plan.feasibility}`}>
                 {plan.feasibility === 'full' ? 'Full coverage' : 'Partial coverage'}
               </span>
             </div>
 
-            {/* Version Switcher (Allows switching without overwriting earlier plans) */}
+            {/* Version Switcher */}
             {availableVersions.length > 1 && (
               <div className="version-selector-group" role="group" aria-label="Study plan versions">
                 <span className="version-selector-label">
@@ -154,27 +162,29 @@ export function StudyTimeline({
               </div>
             )}
 
+            {/* Honest Metric: Sessions completed */}
             <div className="timeline-stats-row">
               <span className="timeline-stat-highlight">
-                <strong>{completedCount}</strong> of <strong>{totalCount}</strong> sessions completed
+                Sessions completed: <strong>{completedCount}</strong> of <strong>{totalCount}</strong> ({progressPercent}%)
               </span>
               <span className="timeline-stat-divider">·</span>
               <span>
                 <strong>{completedMinutes}</strong> of <strong>{totalMinutes}</strong> min total
               </span>
               <span className="timeline-stat-divider">·</span>
-              <span style={{ color: 'var(--dp-color-accent)', fontWeight: 600 }}>
-                {progressPercent}% progress
+              <span style={{ fontSize: 12, color: 'var(--dp-color-ink-secondary)' }}>
+                (Checklist tracking only; does not claim mastery)
               </span>
             </div>
 
+            {/* Progress Fill Indicator */}
             <div
               className="timeline-progress-track"
               role="progressbar"
               aria-valuenow={progressPercent}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label="Study plan progress"
+              aria-label="Sessions completed progress"
             >
               <div
                 className="timeline-progress-fill"
@@ -245,7 +255,7 @@ export function StudyTimeline({
             </span>
           </label>
           <span style={{ fontSize: 12, color: 'var(--dp-color-ink-secondary)' }}>
-            (Exercises recoverable error state)
+            (Exercises recoverable error alert)
           </span>
         </div>
 
@@ -270,123 +280,279 @@ export function StudyTimeline({
         <div className="timeline-honest-disclaimer">
           <Info size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
           <span>
-            This timeline previews how Person 3's planner orchestrates study sessions. Durations reflect topic estimates ({totalMinutes} minutes total). Checkbox toggles simulate local session progress without claiming formal mastery or test scores.
+            Horizontal study checklist layout with staggered milestone connectors. Checkbox clicks record local progress across sessions ({totalMinutes} minutes total). Click any milestone card to inspect its actionable steps and related resource.
           </span>
         </div>
 
-        {/* Vertical Timeline Structure */}
-        <div className="vertical-timeline" role="list" aria-label="Scheduled study sessions list">
-          {plan.entries.map((entry, index) => {
-            const isPending = pendingEntryId === entry.entryId
-            const isLast = index === plan.entries.length - 1
-
-            return (
+        {/* ============================================================ */}
+        {/* HORIZONTAL STUDY CHECKLIST (Layout Reference Implementation) */}
+        {/* ============================================================ */}
+        <div
+          className="checklist-scroll-container"
+          tabIndex={0}
+          role="region"
+          aria-label="Horizontal study checklist timeline, scrollable with arrow keys"
+        >
+          <div className="checklist-diagram">
+            {/* The Main Continuous Horizontal Line across all columns */}
+            <div className="checklist-horizontal-rail" aria-hidden="true">
               <div
-                key={entry.entryId}
-                className={`timeline-item ${entry.completed ? 'is-completed' : ''} ${isPending ? 'is-pending' : ''}`}
-                role="listitem"
-              >
-                {/* Continuous Vertical Guide Line */}
-                {!isLast && <div className="timeline-line" aria-hidden="true" />}
+                className="checklist-rail-progress"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
 
-                {/* Left: Node & Accessible Checkbox */}
-                <div className="timeline-left-col">
-                  <div className={`timeline-node ${entry.completed ? 'node-completed' : ''}`} aria-hidden="true">
-                    {isPending ? (
-                      <Loader2 size={13} className="animate-spin" />
-                    ) : entry.completed ? (
-                      <Check size={14} strokeWidth={3} />
-                    ) : (
-                      <span className="node-num">{index + 1}</span>
-                    )}
-                  </div>
-
-                  <label className="timeline-checkbox-label">
-                    <input
-                      type="checkbox"
-                      className="timeline-checkbox"
-                      checked={entry.completed}
-                      disabled={isPending}
-                      aria-label={`Mark session ${index + 1}: ${entry.activityTitle ?? entry.summary} on ${entry.topicTitle} as ${entry.completed ? 'incomplete' : 'completed'}`}
-                      onChange={(e) => handleCheckboxChange(entry, e.target.checked)}
-                    />
-                    <span className="timeline-checkbox-custom" aria-hidden="true">
-                      {entry.completed && <CheckCircle2 size={16} color="#1a7f37" />}
-                    </span>
-                  </label>
+            {/* Columns Track */}
+            <div className="checklist-columns-track" role="list" aria-label="Chronological study milestones">
+              {/* Endpoint 0%: Start Connector */}
+              <div className="checklist-col checklist-endpoint-col" aria-hidden="true">
+                <div className="checklist-connector-vertical" style={{ height: 60 }}>
+                  <div className="checklist-marker-dot endpoint-dot" />
                 </div>
+                <div className="checklist-endpoint-label">0%</div>
+                <div className="checklist-endpoint-sub">Start</div>
+              </div>
 
-                {/* Right: Session Details Card */}
-                <div className="timeline-card">
-                  <div className="timeline-card-header">
-                    <div className="timeline-card-meta">
-                      <span className="timeline-day-pill">{entry.scheduledDay}</span>
-                      <span className={`timeline-kind-badge ${entry.activityKind}`}>
-                        {entry.activityKind}
-                      </span>
-                      <span className="timeline-duration-badge">
-                        <Clock size={12} aria-hidden="true" />
-                        {entry.durationMinutes} min
-                      </span>
-                      {entry.resourceName && (
-                        <span className="timeline-resource-pill">
-                          <FileText size={12} aria-hidden="true" />
-                          {entry.resourceName}
-                        </span>
-                      )}
-                    </div>
+              {/* Chronological Milestones (Sessions) */}
+              {plan.entries.map((entry, index) => {
+                const isPending = pendingEntryId === entry.entryId
+                const isSelected = selectedEntryId === entry.entryId
+                const dropHeight = STAGGER_CONNECTOR_HEIGHTS[index % STAGGER_CONNECTOR_HEIGHTS.length]
 
-                    <span className="timeline-version-tag">Plan v{plan.version}</span>
-                  </div>
-
-                  <div className="timeline-card-body">
-                    <h4 className="timeline-activity-title">
-                      {entry.activityTitle ?? entry.summary}
-                    </h4>
-                    <div className="timeline-topic-ref">
-                      Topic: <strong>{entry.topicTitle}</strong>
-                    </div>
-                    <p className="timeline-summary-text">{entry.summary}</p>
-                  </div>
-
-                  {/* Expandable Activity Details (Fixture-grounded) */}
-                  {(entry.steps || entry.expectedOutcome) && (
-                    <details className="timeline-details-disclosure">
-                      <summary className="timeline-details-summary">
-                        View session steps & expected outcome
-                      </summary>
-                      <div className="timeline-disclosure-content">
-                        {entry.steps && entry.steps.length > 0 && (
-                          <div style={{ marginBottom: 10 }}>
-                            <strong style={{ fontSize: 13, color: 'var(--dp-color-ink)' }}>
-                              Actionable session steps:
-                            </strong>
-                            <ol className="timeline-steps-list">
-                              {entry.steps.map((step, sIdx) => (
-                                <li key={sIdx}>{step}</li>
-                              ))}
-                            </ol>
-                          </div>
-                        )}
-
-                        {entry.expectedOutcome && (
-                          <div className="timeline-outcome-box">
-                            <strong style={{ fontSize: 12, color: 'var(--dp-color-accent)' }}>
-                              Expected session outcome:
-                            </strong>
-                            <p style={{ margin: '4px 0 0 0', fontSize: 13 }}>
-                              {entry.expectedOutcome}
-                            </p>
-                          </div>
+                return (
+                  <div
+                    key={entry.entryId}
+                    className={`checklist-col checklist-milestone-col ${
+                      entry.completed ? 'is-completed' : ''
+                    } ${isSelected ? 'is-selected' : ''}`}
+                    role="listitem"
+                  >
+                    {/* Vertical Connector extending downward from horizontal rail */}
+                    <div
+                      className={`checklist-connector-vertical ${
+                        entry.completed ? 'connector-completed' : ''
+                      }`}
+                      style={{ height: dropHeight }}
+                      aria-hidden="true"
+                    >
+                      {/* Circular Marker at connector end */}
+                      <div
+                        className={`checklist-marker-dot ${
+                          entry.completed ? 'marker-completed' : ''
+                        }`}
+                      >
+                        {isPending ? (
+                          <Loader2 size={10} className="animate-spin" />
+                        ) : entry.completed ? (
+                          <Check size={10} strokeWidth={3} />
+                        ) : (
+                          <span className="marker-num">{index + 1}</span>
                         )}
                       </div>
-                    </details>
-                  )}
+                    </div>
+
+                    {/* Milestone Card beneath the marker */}
+                    <div
+                      className={`checklist-milestone-card ${
+                        entry.completed ? 'card-completed' : ''
+                      } ${isSelected ? 'card-selected' : ''}`}
+                      onClick={() => setSelectedEntryId(entry.entryId)}
+                    >
+                      {/* Top Checkbox + Concise Title */}
+                      <div className="milestone-card-header">
+                        <label
+                          className="milestone-checkbox-wrap"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            className="milestone-checkbox"
+                            checked={entry.completed}
+                            disabled={isPending}
+                            aria-label={`Mark session ${index + 1}: ${
+                              entry.activityTitle ?? entry.summary
+                            } on ${entry.topicTitle} as ${
+                              entry.completed ? 'incomplete' : 'completed'
+                            }`}
+                            onChange={(e) => handleCheckboxChange(entry, e.target.checked)}
+                          />
+                        </label>
+
+                        <h4 className="milestone-card-title" title={entry.activityTitle ?? entry.summary}>
+                          {entry.activityTitle ?? entry.summary}
+                        </h4>
+                      </div>
+
+                      {/* Supporting Metadata: Day, Duration, Kind */}
+                      <div className="milestone-card-meta">
+                        <span className="milestone-day-pill">{entry.scheduledDay}</span>
+                        <span className="milestone-duration-pill">
+                          <Clock size={11} aria-hidden="true" />
+                          {entry.durationMinutes}m
+                        </span>
+                        <span className={`milestone-kind-pill ${entry.activityKind}`}>
+                          {entry.activityKind}
+                        </span>
+                      </div>
+
+                      {/* Topic Name */}
+                      <div className="milestone-topic-name" title={`Topic: ${entry.topicTitle}`}>
+                        {entry.topicTitle}
+                      </div>
+
+                      {/* Resource Tag if present */}
+                      {entry.resourceName && (
+                        <div className="milestone-resource-tag" title={entry.resourceName}>
+                          <FileText size={11} aria-hidden="true" />
+                          <span className="milestone-resource-text">{entry.resourceName}</span>
+                        </div>
+                      )}
+
+                      {/* Inspect Action */}
+                      <button
+                        type="button"
+                        className="milestone-inspect-btn"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedEntryId(entry.entryId)
+                        }}
+                        aria-expanded={isSelected}
+                        aria-label={`Inspect activity details for session ${index + 1}`}
+                      >
+                        Inspect details
+                        <ChevronRight size={13} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Endpoint 100%: End Connector */}
+              <div className="checklist-col checklist-endpoint-col" aria-hidden="true">
+                <div className="checklist-connector-vertical" style={{ height: 60 }}>
+                  <div
+                    className={`checklist-marker-dot endpoint-dot ${
+                      progressPercent === 100 ? 'marker-completed' : ''
+                    }`}
+                  >
+                    {progressPercent === 100 && <Check size={10} strokeWidth={3} />}
+                  </div>
+                </div>
+                <div className="checklist-endpoint-label">100%</div>
+                <div className="checklist-endpoint-sub">Complete</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Horizontal Scroll Indicator Notice */}
+        <div className="checklist-scroll-notice">
+          <span>← Scroll horizontally to browse all milestones →</span>
+        </div>
+
+        {/* ============================================================ */}
+        {/* SESSION ACTIVITY INSPECTION PANEL (When a Milestone is clicked) */}
+        {/* ============================================================ */}
+        {selectedEntry && (
+          <div className="session-inspect-panel" role="region" aria-label="Session details inspection">
+            <div className="session-inspect-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span className="milestone-day-pill">{selectedEntry.scheduledDay}</span>
+                <span className={`timeline-kind-badge ${selectedEntry.activityKind}`}>
+                  {selectedEntry.activityKind}
+                </span>
+                <span className="timeline-duration-badge">
+                  <Clock size={12} aria-hidden="true" />
+                  {selectedEntry.durationMinutes} min
+                </span>
+                <h3 className="session-inspect-title" style={{ margin: 0 }}>
+                  {selectedEntry.activityTitle ?? selectedEntry.summary}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                className="close-btn"
+                onClick={() => setSelectedEntryId(null)}
+                aria-label="Close session details"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="session-inspect-grid">
+              <div className="session-inspect-left">
+                <div className="session-inspect-topic">
+                  Curriculum Topic: <strong>{selectedEntry.topicTitle}</strong>
+                </div>
+                <p className="session-inspect-summary">{selectedEntry.summary}</p>
+
+                {selectedEntry.steps && selectedEntry.steps.length > 0 && (
+                  <div className="session-steps-box">
+                    <strong style={{ fontSize: 13, color: 'var(--dp-color-ink)' }}>
+                      Actionable session steps:
+                    </strong>
+                    <ol className="timeline-steps-list">
+                      {selectedEntry.steps.map((step, sIdx) => (
+                        <li key={sIdx}>{step}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+
+              <div className="session-inspect-right">
+                {selectedEntry.expectedOutcome && (
+                  <div className="timeline-outcome-box" style={{ marginTop: 0, marginBottom: 12 }}>
+                    <strong style={{ fontSize: 12, color: 'var(--dp-color-accent)' }}>
+                      Expected learning outcome:
+                    </strong>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 13, color: 'var(--dp-color-ink)' }}>
+                      {selectedEntry.expectedOutcome}
+                    </p>
+                  </div>
+                )}
+
+                {selectedEntry.resourceName && (
+                  <div className="session-resource-card">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <FileText size={14} color="var(--dp-color-accent)" aria-hidden="true" />
+                      <strong style={{ fontSize: 12, color: 'var(--dp-color-ink)' }}>
+                        Linked study resource:
+                      </strong>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--dp-color-ink)' }}>
+                      {selectedEntry.resourceName}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--dp-color-ink-secondary)', marginTop: 2 }}>
+                      Grounded citation from project study materials
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginTop: 16 }}>
+                  <Button
+                    variant={selectedEntry.completed ? 'secondary' : 'primary'}
+                    onClick={() => handleCheckboxChange(selectedEntry, !selectedEntry.completed)}
+                    disabled={pendingEntryId === selectedEntry.entryId}
+                  >
+                    {selectedEntry.completed ? (
+                      <>
+                        <Check size={15} aria-hidden="true" />
+                        Completed (Click to uncheck)
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={15} aria-hidden="true" />
+                        Mark session completed
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
-            )
-          })}
-        </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Replan Modal Dialog */}
@@ -398,7 +564,7 @@ export function StudyTimeline({
         onSubmitReplan={async (req) => {
           if (onReplanWithRequest) {
             await onReplanWithRequest(req)
-          } else {
+          } else if (onSimulateReplan) {
             await onSimulateReplan()
           }
         }}
