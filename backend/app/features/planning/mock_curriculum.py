@@ -1,0 +1,116 @@
+"""
+Isolated mock curriculum provider used ONLY when the real curriculum service or database is unavailable.
+Replicates the Python Foundations reference curriculum topics and prerequisite DAG.
+"""
+
+from app.contracts.domain import CurriculumSnapshot
+
+
+def get_mock_curriculum_snapshot() -> CurriculumSnapshot:
+    """Return a mock snapshot of Python Foundations curriculum."""
+    return CurriculumSnapshot(
+        curriculum_id="python-foundations-v1",
+        title="Python Foundations (Mock Fallback)",
+        version="1.0",
+        content_hash="mock-hash-python-foundations",
+        topics=[
+            {
+                "id": "variables",
+                "title": "Variables",
+                "objective": "Track assignment and current variable values",
+                "difficulty": 1,
+                "importance": 0.5,
+                "position": 1,
+                "learn_minutes": 10,
+                "practice_minutes": 10,
+                "check_minutes": 0,
+            },
+            {
+                "id": "expressions",
+                "title": "Expressions",
+                "objective": "Evaluate simple arithmetic expressions",
+                "difficulty": 1,
+                "importance": 0.5,
+                "position": 2,
+                "learn_minutes": 10,
+                "practice_minutes": 10,
+                "check_minutes": 0,
+            },
+            {
+                "id": "conditions",
+                "title": "Conditions",
+                "objective": "Trace a simple conditional branch",
+                "difficulty": 2,
+                "importance": 0.5,
+                "position": 3,
+                "learn_minutes": 10,
+                "practice_minutes": 10,
+                "check_minutes": 0,
+            },
+            {
+                "id": "loops",
+                "title": "Loops",
+                "objective": "Trace range bounds and accumulator updates",
+                "difficulty": 2,
+                "importance": 0.5,
+                "position": 4,
+                "learn_minutes": 15,
+                "practice_minutes": 20,
+                "check_minutes": 10,
+            },
+            {
+                "id": "lists",
+                "title": "Lists",
+                "objective": "Read list values using zero-based indices",
+                "difficulty": 2,
+                "importance": 0.5,
+                "position": 5,
+                "learn_minutes": 10,
+                "practice_minutes": 10,
+                "check_minutes": 0,
+            },
+            {
+                "id": "list-iteration",
+                "title": "List iteration",
+                "objective": "Trace iteration through list values",
+                "difficulty": 3,
+                "importance": 0.5,
+                "position": 6,
+                "learn_minutes": 15,
+                "practice_minutes": 15,
+                "check_minutes": 5,
+            },
+            {
+                "id": "nested-loops",
+                "title": "Nested loops",
+                "objective": "Trace the order of nested-loop iterations",
+                "difficulty": 3,
+                "importance": 0.5,
+                "position": 7,
+                "learn_minutes": 15,
+                "practice_minutes": 20,
+                "check_minutes": 5,
+            },
+            {
+                "id": "functions-intro",
+                "title": "Introduction to functions",
+                "objective": "Trace execution through function call and return",
+                "difficulty": 3,
+                "importance": 0.5,
+                "position": 8,
+                "learn_minutes": 15,
+                "practice_minutes": 20,
+                "check_minutes": 10,
+            },
+        ],
+        prerequisites=[
+            {"curriculum_id": "python-foundations-v1", "topic_id": "expressions", "prerequisite_topic_id": "variables"},
+            {"curriculum_id": "python-foundations-v1", "topic_id": "conditions", "prerequisite_topic_id": "expressions"},
+            {"curriculum_id": "python-foundations-v1", "topic_id": "loops", "prerequisite_topic_id": "conditions"},
+            {"curriculum_id": "python-foundations-v1", "topic_id": "lists", "prerequisite_topic_id": "expressions"},
+            {"curriculum_id": "python-foundations-v1", "topic_id": "list-iteration", "prerequisite_topic_id": "loops"},
+            {"curriculum_id": "python-foundations-v1", "topic_id": "list-iteration", "prerequisite_topic_id": "lists"},
+            {"curriculum_id": "python-foundations-v1", "topic_id": "nested-loops", "prerequisite_topic_id": "loops"},
+            {"curriculum_id": "python-foundations-v1", "topic_id": "functions-intro", "prerequisite_topic_id": "conditions"},
+        ],
+    )
