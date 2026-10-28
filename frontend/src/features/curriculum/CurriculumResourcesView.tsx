@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { Button } from '../../components/ui'
+import { liveCurriculumService } from './liveService'
 import { mockCurriculumService } from './mockService'
 import type { BatchUploadResult, CurriculumTopic, ResourceItem } from './types'
 
@@ -105,7 +106,7 @@ export function CurriculumResourcesView({
   async function openPreview(res: ResourceItem) {
     // Fetch detailed content for this resource
     try {
-      const detail = await mockCurriculumService.getResourceDetail(res.id)
+      const detail = await liveCurriculumService.getResourceDetail(res.id)
       setPreviewResource(detail)
     } catch {
       setPreviewResource(res)

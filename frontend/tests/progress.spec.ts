@@ -44,7 +44,7 @@ test.describe('Progress and assessment workspace suite', () => {
     await page.getByLabel(/your name/i).fill('Progress Student')
     await page.getByLabel('Goal title').fill('Mastery Verification')
     await page.getByLabel('Loops', { exact: true }).check()
-    await page.getByRole('button', { name: 'Save my learning goal' }).click()
+    await page.getByRole('button', { name: /Create my learning plan|Save my learning goal/i }).click()
     await expect(page.getByText('Your goal is saved.')).toBeVisible()
 
     // Navigate to Progress

@@ -366,7 +366,7 @@ export function Setup() {
                   />
                 </label>
 
-                {availableCurricula.length > 1 && (
+                {availableCurricula.length > 1 ? (
                   <label>
                     Curriculum subject
                     <select
@@ -385,6 +385,18 @@ export function Setup() {
                       ))}
                     </select>
                   </label>
+                ) : (
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-subtle)' }}>
+                      Curriculum subject
+                    </label>
+                    <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginTop: '4px' }}>
+                      {curriculum?.title || 'Programming foundations — demo'}{' '}
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                        (Demonstration curriculum)
+                      </span>
+                    </div>
+                  </div>
                 )}
               </fieldset>
 

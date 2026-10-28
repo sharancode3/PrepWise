@@ -61,6 +61,8 @@ class GoalCreate(Contract):
     deadline: date
     targets: list[TargetInput] = Field(min_length=1, max_length=30)
     availability: list[AvailabilityInput] = Field(max_length=30)
+    max_session_minutes: int | None = Field(default=25, ge=15, le=45)
+    preferred_pace: Literal["balanced", "intensive", "relaxed"] | None = "balanced"
 
     @model_validator(mode="after")
     def validate_dates_targets(self):

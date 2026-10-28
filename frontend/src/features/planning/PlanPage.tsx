@@ -73,6 +73,7 @@ export function PlanPage() {
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
   const [completedWorkItemIds, setCompletedWorkItemIds] = useState<Set<string>>(new Set())
+  const [goalRevision, setGoalRevision] = useState<number>(0)
 
   // Synchronize goal ID from storage events
   useEffect(() => {
@@ -94,7 +95,12 @@ export function PlanPage() {
       const active = data.find((p) => p.is_active) ?? data[0] ?? null
       setSelected(active)
 
-      // Fetch learning state / completed items if available
+      // Fetch goal revision and learning state
+      try {
+        const goalData = await api<{ input_revision: number }>(`/goals/${goalId}`)
+        setGoalRevision(goalData.input_revision)
+      } catch {}
+
       try {
         const state = await api<{ completed_work_items?: string[] }>(`/goals/${goalId}/learning-state`)
         if (state.completed_work_items) {
@@ -112,6 +118,29 @@ export function PlanPage() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleToggleWorkItem(workItemId: string, markDone: boolean) {
+    if (!goalId || !selected) return
+    if (markDone) {
+      try {
+        await api(`/goals/${goalId}/progress-events`, {
+          method: 'POST',
+          body: JSON.stringify({
+            expected_revision: goalRevision,
+            plan_id: selected.plan_id,
+            work_item_id: workItemId,
+            event_type: 'completed',
+            actual_minutes: 25,
+          }),
+        })
+        setCompletedWorkItemIds((prev) => new Set([...prev, workItemId]))
+        setGoalRevision((r) => r + 1)
+      } catch {
+        // Fallback local update
+        setCompletedWorkItemIds((prev) => new Set([...prev, workItemId]))
+      }
     }
   }
 
@@ -154,10 +183,15 @@ export function PlanPage() {
         <Eyebrow>My plan</Eyebrow>
         <h1 className="page-title">Start with your study details.</h1>
         <Notice>
-          Create a goal and choose availability before generating a schedule.{' '}
-          <Link className="text-link" to="/setup">
-            Open setup <ArrowRight size={14} aria-hidden="true" />
-          </Link>
+          <p>Create a goal and choose availability before generating a schedule.</p>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginTop: '12px' }}>
+            <Link className="text-link" to="/setup">
+              Open setup <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+            <Link className="text-link" to="/changes">
+              View plan changes &amp; export <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </div>
         </Notice>
       </section>
     )
@@ -187,20 +221,20 @@ export function PlanPage() {
             Deterministic timetable balanced around your availability, prerequisite dependencies, and learning pace.
           </p>
         </div>
-        {selected && (
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
-            <Link to="/setup" className="toggle-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Sliders size={14} aria-hidden="true" /> Edit availability
-            </Link>
-            <Link
-              to={selected.parent_plan_id ? `/changes?from=${selected.parent_plan_id}&to=${selected.plan_id}` : `/changes`}
-              className="toggle-btn"
-              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-            >
-              <GitCompare size={14} aria-hidden="true" /> Compare &amp; export
-            </Link>
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
+          <Link to="/setup" className="toggle-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Sliders size={14} aria-hidden="true" /> Edit availability
+          </Link>
+          <Link
+            to={selected?.parent_plan_id ? `/changes?from=${selected.parent_plan_id}&to=${selected.plan_id}` : `/changes`}
+            className="toggle-btn"
+            aria-label="View plan changes & export"
+            title="View plan changes & export"
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <GitCompare size={14} aria-hidden="true" /> Compare &amp; export
+          </Link>
+        </div>
       </div>
 
       {error && <Notice error>{error}</Notice>}
@@ -353,11 +387,29 @@ export function PlanPage() {
                               }}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                {isDone ? (
-                                  <CheckCircle2 size={18} color="#16a34a" aria-label="Completed" />
-                                ) : (
-                                  <Clock size={18} color="var(--dp-color-ink-muted)" aria-hidden="true" />
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleWorkItem(entry.work_item_id, !isDone)}
+                                  disabled={isDone}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: isDone ? 'default' : 'pointer',
+                                    padding: '2px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: '4px',
+                                  }}
+                                  aria-label={isDone ? `Session on ${entry.topic_title || entry.topic_id} is completed` : `Mark session on ${entry.topic_title || entry.topic_id} as completed`}
+                                  title={isDone ? 'Completed' : 'Click to mark session completed'}
+                                >
+                                  {isDone ? (
+                                    <CheckCircle2 size={18} color="#16a34a" aria-hidden="true" />
+                                  ) : (
+                                    <Clock size={18} color="var(--dp-color-ink-muted)" aria-hidden="true" />
+                                  )}
+                                </button>
                                 <div>
                                   <div style={{ fontWeight: 600, color: 'var(--dp-color-ink)', fontSize: '0.95rem' }}>
                                     {entry.topic_title || entry.title || entry.topic_id}

@@ -13,7 +13,7 @@ Reuses shared contracts and preserves ResourceMatch exactly as defined in app.co
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # Re-export shared contracts to preserve exact external integration
 from app.contracts.domain import Contract, ResourceMatch, CurriculumSnapshot
@@ -94,6 +94,7 @@ class UploadedResourceDetail(Contract):
 class ResourcePreview(Contract):
     """Compact summary of a resource for lists and previews."""
     resource_id: str
+    id: str | None = None
     project_id: str | None = None
     curriculum_id: str
     topic_id: str
@@ -107,6 +108,15 @@ class ResourcePreview(Contract):
     mime_type: str = "text/plain"
     created_at: str = ""
     extracted_text: str | None = None
+    preview_text: str | None = None
+
+    @model_validator(mode="after")
+    def populate_compat_fields(self):
+        if not self.id:
+            self.id = self.resource_id
+        if not self.preview_text:
+            self.preview_text = self.extracted_text or self.snippet
+        return self
 
 
 class StudyScopeSave(Contract):

@@ -35,7 +35,8 @@ interface ApiScope {
 }
 
 interface ApiResourcePreview {
-  id: string
+  id?: string
+  resource_id?: string
   title: string
   original_filename: string
   mime_type: string
@@ -43,7 +44,9 @@ interface ApiResourcePreview {
   processing_status: string
   topic_id?: string | null
   project_id?: string | null
-  preview_text: string
+  preview_text?: string | null
+  extracted_text?: string | null
+  snippet?: string | null
   chunk_count: number
   created_at: string
 }
@@ -213,8 +216,10 @@ export class CurriculumLiveService {
       const query = projectId ? `?project_id=${encodeURIComponent(projectId)}` : ''
       const uploaded = await api<ApiResourcePreview[]>(`/curricula/resources${query}`)
       for (const u of uploaded) {
+        const text = u.extracted_text || u.preview_text || u.snippet || ''
+        const id = u.resource_id || u.id || ''
         items.push({
-          id: u.id,
+          id,
           projectId: u.project_id || projectId,
           title: u.title,
           filename: u.original_filename,
@@ -223,8 +228,8 @@ export class CurriculumLiveService {
           byteSize: u.byte_size,
           topicIds: u.topic_id ? [u.topic_id] : [],
           sourceLabel: 'Uploaded resource',
-          snippet: u.preview_text ? u.preview_text.slice(0, 200) : 'Uploaded document indexed.',
-          fullText: u.preview_text,
+          snippet: text ? text.slice(0, 200) : 'Uploaded document indexed.',
+          fullText: text,
           addedAt: u.created_at,
           hasInMemoryFile: true,
           previewType: u.mime_type.includes('pdf') ? 'local-pdf' : 'local-text',
@@ -239,21 +244,23 @@ export class CurriculumLiveService {
 
   async getResourceDetail(resourceId: string): Promise<ResourceItem> {
     try {
-      const preview = await api<ApiResourcePreview>(`/curricula/resources/${resourceId}/preview`)
+      const preview = await api<ApiResourcePreview>(`/curricula/resources/${encodeURIComponent(resourceId)}/preview`)
+      const resId = preview.resource_id || preview.id || resourceId
+      const text = preview.extracted_text || preview.preview_text || preview.snippet || ''
       return {
-        id: preview.id,
+        id: resId,
         title: preview.title,
         filename: preview.original_filename,
         kind: 'local',
-        mimeType: preview.mime_type,
-        byteSize: preview.byte_size,
+        mimeType: preview.mime_type || 'text/plain',
+        byteSize: preview.byte_size || 0,
         topicIds: preview.topic_id ? [preview.topic_id] : [],
         sourceLabel: 'Uploaded resource',
-        snippet: preview.preview_text.slice(0, 200),
-        fullText: preview.preview_text,
+        snippet: text ? text.slice(0, 200) : '',
+        fullText: text,
         addedAt: preview.created_at,
         hasInMemoryFile: true,
-        previewType: preview.mime_type.includes('pdf') ? 'local-pdf' : 'local-text',
+        previewType: (preview.mime_type || '').includes('pdf') ? 'local-pdf' : 'local-text',
       }
     } catch {
       return this.fallbackMock.getResourceDetail(resourceId)
@@ -284,8 +291,10 @@ export class CurriculumLiveService {
           body: formData,
         })
 
+        const resId = uploaded.resource_id || uploaded.id || file.name
+        const text = uploaded.extracted_text || uploaded.preview_text || uploaded.snippet || ''
         added.push({
-          id: uploaded.id,
+          id: resId,
           projectId,
           title: uploaded.title,
           filename: uploaded.original_filename,
@@ -294,11 +303,11 @@ export class CurriculumLiveService {
           byteSize: uploaded.byte_size,
           topicIds: uploaded.topic_id ? [uploaded.topic_id] : assignedTopicId ? [assignedTopicId] : [],
           sourceLabel: 'Uploaded resource',
-          snippet: uploaded.preview_text ? uploaded.preview_text.slice(0, 200) : 'File uploaded and indexed.',
-          fullText: uploaded.preview_text,
+          snippet: text ? text.slice(0, 200) : 'File uploaded and indexed.',
+          fullText: text,
           addedAt: uploaded.created_at,
           hasInMemoryFile: true,
-          previewType: uploaded.mime_type.includes('pdf') ? 'local-pdf' : 'local-text',
+          previewType: (uploaded.mime_type || '').includes('pdf') ? 'local-pdf' : 'local-text',
         })
       } catch (err) {
         skipped.push({
@@ -312,6 +321,13 @@ export class CurriculumLiveService {
   }
 
   async removeResource(projectId: string, resourceId: string): Promise<void> {
+    try {
+      await api(`/curricula/resources/${encodeURIComponent(resourceId)}`, {
+        method: 'DELETE',
+      })
+    } catch {
+      // Backend archive fallback
+    }
     return this.fallbackMock.removeResource(projectId, resourceId)
   }
 
