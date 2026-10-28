@@ -30,7 +30,7 @@ Status: product specification plus implemented basic foundation, version 1.1. Da
 | [11 — Decisions and roadmap](11-decisions-roadmap-sources.md) | Rationale, tradeoffs, innovation gates, verified sources |
 | [12 — UI/UX](12-ui-ux-design-system.md) | Authoritative supplied design system, routes, accessibility and responsive behavior |
 | [13 — Foundation status](13-foundation-status-runbook.md) | Implemented scope, setup commands and start-work handoff |
-| [Feature A (Person 2) Handoff](PERSON_2_MASTER_INTEGRATION_HANDOFF.md) | Ultra-detailed handoff for Person 1 (Integrator), Person 3, 4, and 5 |
+| [14 — Person 2 Curriculum Handoff](14-person2-curriculum-handoff.md) | Complete integration handover for Person 1 (Integrator), Person 3, 4, and 5 |
 | [Reference SQL](reference/schema.sql) | Executable reference schema, not an application migration |
 | [Contract examples](contracts/) | Internal sample requests and outputs for shared understanding |
 | [Reference validator](reference/validate_reference.py) | Repeatable documentation/schema/fixture integrity checks |
