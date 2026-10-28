@@ -68,7 +68,9 @@ export function CurriculumPlanView({
   const [freeText, setFreeText] = useState<string>(
     initialScope?.freeTextRequest ?? ''
   )
-  const [viewMode, setViewMode] = useState<PlanSubView>('configure')
+  const [viewMode, setViewMode] = useState<PlanSubView>(
+    plan && plan.entries.length > 0 ? 'timeline' : 'configure'
+  )
   const [validationError, setValidationError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -308,7 +310,7 @@ export function CurriculumPlanView({
               Back to selection
             </Button>
             <Button onClick={() => setViewMode('timeline')}>
-              View sample plan
+              View study checklist
               <ArrowRight size={15} aria-hidden="true" />
             </Button>
           </div>
@@ -328,7 +330,7 @@ export function CurriculumPlanView({
           </div>
           <Button variant="secondary" onClick={() => setViewMode('timeline')}>
             <Calendar size={15} aria-hidden="true" />
-            Jump to timeline preview
+            View study checklist
           </Button>
         </div>
 
