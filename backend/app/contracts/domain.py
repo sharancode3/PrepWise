@@ -84,6 +84,22 @@ class AvailabilityReplace(Contract):
     availability: list[AvailabilityInput] = Field(max_length=30)
 
 
+class GoalUpdate(Contract):
+    expected_revision: int = Field(ge=0, strict=True)
+    title: str = Field(min_length=1, max_length=120)
+    goal_text: str = Field(default="", max_length=1000)
+    start_date: date
+    deadline: date
+    availability: list[AvailabilityInput] = Field(max_length=30)
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if not 1 <= (self.deadline - self.start_date).days + 1 <= 30:
+            raise ValueError("Choose a horizon of 1–30 days inclusive")
+        validate_availability(self.availability, self.start_date, self.deadline)
+        return self
+
+
 class PlanJobCreate(Contract):
     expected_revision: int = Field(ge=0, strict=True)
     mode: Literal["generate", "replan"]

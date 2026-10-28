@@ -91,6 +91,26 @@ npm.cmd run test:e2e
 
 ## 4. Next Steps for Next AI Assistant
 
+### Completed next stage: Planning UI, Replanning, and Plan History
+
+- Added the live `/plan` screen (`PlanPage.tsx`) with grouped date sessions, topic/activity/duration rows, feasibility status, capacity metrics, deferred work, loading/empty/error states, and a selectable version list that marks the active plan.
+- Setup now generates the first plan after saving. Existing saved goals are loaded into Setup, so deadline or availability changes update the same goal and trigger `mode="replan"` rather than creating a replacement goal.
+- Wired planning routes to the existing `generate_study_plan()` GA engine and live curriculum snapshot. The route uses recorded `progress_events` with `completed` status when present; it does not implement progress tracking.
+- Added goal-edit validation and persistence for deadline/availability updates. Each generation persists a new `plan_versions` row, supersedes the former active plan, saves schedule entries/work items in the existing schema, and exposes current, history-list, and version-detail endpoints.
+- The plan-job endpoint is deliberately synchronous in this prototype adapter while retaining the pre-existing API contract. It does not create a second scheduler or add external storage.
+
+Verification completed for this stage:
+
+```powershell
+cd frontend
+npm.cmd run build # passed
+
+cd ../backend
+.\.venv\Scripts\python.exe -m pytest tests\test_planning.py # 22 passed
+```
+
+The full backend suite has one obsolete foundation-test assertion that expects `/plan-jobs` to return HTTP 501; the endpoint now intentionally returns HTTP 202.
+
 1. **Plan Persistence & Versioning**:
    - Save candidate schedules into SQLite tables `plan_versions`, `plan_entries`, and `work_items` using `JobRunner.complete()` when activated.
 2. **Background Job Wiring**:

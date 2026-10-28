@@ -72,7 +72,19 @@ export function Setup() {
       .then(async (rows) => {
         if (!rows.length) throw new Error('No curriculum is available yet. Run the curriculum seed command.')
         const data = await api<Curriculum>(`/curricula/${rows[0].id}`)
-        if (active) setCurriculum(data)
+        if (active) {
+          setCurriculum(data)
+          const existingGoal = localStorage.getItem('learnnova.goal-id')
+          if (existingGoal) {
+            try {
+              const goal = await api<{ title: string; goal_text: string; start_date: string; deadline: string; targets: { topic_id: string; self_report: Familiarity }[]; availability: { date: string; minutes: number }[] }>(`/goals/${existingGoal}`)
+              if (!active) return
+              setTitle(goal.title); setGoalText(goal.goal_text); setStart(goal.start_date); setEnd(goal.deadline)
+              setTargets(goal.targets.map(t => t.topic_id)); setFamiliarity(Object.fromEntries(goal.targets.map(t => [t.topic_id, t.self_report])))
+              setCustomAvailability(Object.fromEntries(goal.availability.map(row => [row.date, row.minutes])))
+            } catch { /* First-time setup or an unavailable local goal; retain blank form. */ }
+          }
+        }
       })
       .catch((e) => {
         if (active) setError(e.message)
@@ -157,7 +169,8 @@ export function Setup() {
         topic_id,
         self_report: familiarity[topic_id] || 'unknown',
       }))
-      const result = await saveGoal({
+      const existingGoal = localStorage.getItem('learnnova.goal-id')
+      const payload = {
         expected_revision: profile.input_revision,
         curriculum_id: curriculum.curriculum_id,
         title,
@@ -166,6 +179,13 @@ export function Setup() {
         deadline: end,
         targets: payloadTargets,
         availability: rows,
+      }
+      const result = existingGoal
+        ? await api<SavedGoal>(`/goals/${existingGoal}`, { method: 'PATCH', body: JSON.stringify({ expected_revision: payload.expected_revision, title: payload.title, goal_text: payload.goal_text, start_date: payload.start_date, deadline: payload.deadline, availability: payload.availability }) })
+        : await saveGoal(payload)
+      await api(`/goals/${result.goal_id}/plan-jobs`, {
+        method: 'POST',
+        body: JSON.stringify({ expected_revision: result.input_revision, mode: existingGoal ? 'replan' : 'generate' }),
       })
       setSaved(result)
     } catch (e) {
@@ -437,7 +457,7 @@ export function Setup() {
 
               <div className="form-actions">
                 <Button type="submit" disabled={saving}>
-                  {saving ? 'Saving your workspace…' : 'Save my learning goal'}
+                  {saving ? 'Creating your plan…' : 'Create my learning plan'}
                   <ArrowRight size={17} aria-hidden="true" />
                 </Button>
                 <span>No file upload needed</span>
@@ -450,7 +470,7 @@ export function Setup() {
               <strong>
                 <Check size={16} aria-hidden="true" /> Your goal is saved.
               </strong>
-              <p>{saved.title} is stored locally. Your planning feature can now use these inputs.</p>
+              <p>{saved.title} is stored locally and your first schedule is ready.</p>
               <Link className="text-link" to="/plan">
                 Open my plan <ArrowRight size={15} aria-hidden="true" />
               </Link>

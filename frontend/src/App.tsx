@@ -4,6 +4,7 @@ import { ArrowUpRight, BookOpen } from 'lucide-react'
 import { api } from './lib/api'
 import { Home } from './features/home/Home'
 import { Setup } from './features/planning/Setup'
+import { PlanPage } from './features/planning/PlanPage'
 import { CurriculumPage } from './features/curriculum/CurriculumPage'
 import { FeaturePage } from './components/FeaturePage'
 
@@ -21,7 +22,7 @@ export function App() {
       <Route path="/" element={<Home />} />
       <Route path="/setup" element={<Setup />} />
       <Route path="/curriculum" element={<CurriculumPage />} />
-      <Route path="/plan" element={<FeaturePage feature="Personalized planning" title="A clear path starts with your goal." description="Your profile and availability can be saved now. The planning feature will turn them into a validated daily schedule." owner="Member 3 · Planning" />} />
+      <Route path="/plan" element={<PlanPage />} />
       <Route path="/study" element={<FeaturePage feature="Learning activities" title="Make every session meaningful." description="This feature will bring together focused activities, reviewed resources and clear learning objectives." owner="Member 1 · Activities" />} />
       <Route path="/progress" element={<FeaturePage feature="Progress and assessment" title="Understanding deserves evidence." description="Your completed sessions and independent checks will live here. No learning scores have been recorded by this foundation." owner="Member 4 · Progress" />} />
       <Route path="/changes" element={<FeaturePage feature="Plan comparison" title="See the reason behind every change." description="Compare saved plan versions and export your schedule once the planning and insights features are connected." owner="Member 5 · Insights" />} />
