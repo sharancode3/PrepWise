@@ -106,6 +106,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/curricula/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Projects */
+        get: operations["list_projects_api_v1_curricula_projects_get"];
+        put?: never;
+        /** Create Project */
+        post: operations["create_project_api_v1_curricula_projects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/curricula/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project */
+        get: operations["get_project_api_v1_curricula_projects__project_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/curricula/projects/{project_id}/scope": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Study Scope */
+        get: operations["get_study_scope_api_v1_curricula_projects__project_id__scope_get"];
+        /** Save Study Scope */
+        put: operations["save_study_scope_api_v1_curricula_projects__project_id__scope_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/curricula/resources/{resource_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Resource Preview */
+        get: operations["get_resource_preview_api_v1_curricula_resources__resource_id__preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/curricula/retrieval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Test Retrieval */
+        get: operations["test_retrieval_api_v1_curricula_retrieval_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/curricula/{curriculum_id}": {
         parameters: {
             query?: never;
@@ -543,6 +630,52 @@ export interface components {
             /** Hint Text */
             hint_text: string;
         };
+        /**
+         * ProjectCreate
+         * @description Request payload to create a learning project container.
+         */
+        ProjectCreate: {
+            /**
+             * Title
+             * @description Project title
+             */
+            title: string;
+            /**
+             * Curriculum Id
+             * @description Associated curriculum ID
+             */
+            curriculum_id: string;
+            /**
+             * Description
+             * @description Optional project description
+             */
+            description?: string | null;
+        };
+        /**
+         * ProjectPublic
+         * @description Public representation of an owned learning project.
+         */
+        ProjectPublic: {
+            /** Project Id */
+            project_id: string;
+            /** Student Id */
+            student_id: string;
+            /** Curriculum Id */
+            curriculum_id: string;
+            /** Title */
+            title: string;
+            /** Description */
+            description?: string | null;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+            /**
+             * Resource Count
+             * @default 0
+             */
+            resource_count: number;
+        };
         /** ProvenanceMetadata */
         ProvenanceMetadata: {
             /**
@@ -572,6 +705,45 @@ export interface components {
             /** Score */
             score?: number | null;
         };
+        /**
+         * ResourcePreview
+         * @description Compact summary of a resource for lists and previews.
+         */
+        ResourcePreview: {
+            /** Resource Id */
+            resource_id: string;
+            /** Project Id */
+            project_id?: string | null;
+            /** Curriculum Id */
+            curriculum_id: string;
+            /** Topic Id */
+            topic_id: string;
+            /** Title */
+            title: string;
+            /** Source Label */
+            source_label: string;
+            /** Snippet */
+            snippet: string;
+            /**
+             * Chunk Count
+             * @default 0
+             */
+            chunk_count: number;
+            processing_status: components["schemas"]["ResourceProcessingStatus"];
+            /**
+             * Byte Size
+             * @default 0
+             */
+            byte_size: number;
+        };
+        /**
+         * ResourceProcessingStatus
+         * @description Actual runtime processing states for uploaded resources.
+         *
+         *     No fake percentages or speculative states.
+         * @enum {string}
+         */
+        ResourceProcessingStatus: "received" | "extracting" | "extracted" | "embedding" | "indexed" | "failed" | "archived";
         /**
          * SelfReport
          * @enum {string}
@@ -673,6 +845,52 @@ export interface components {
             topic_id?: string | null;
             /** @default normal */
             mode: components["schemas"]["SupportMode"];
+        };
+        /**
+         * StudyScopeSave
+         * @description Student study scope selection linking topics, resources, and free-text queries.
+         */
+        StudyScopeSave: {
+            /**
+             * Selected Topic Ids
+             * @description At least one target topic is required
+             */
+            selected_topic_ids: string[];
+            /**
+             * Selected Resource Ids
+             * @description Optional specific resources chosen
+             */
+            selected_resource_ids?: string[];
+            /**
+             * Free Text Request
+             * @description Optional raw study inquiry
+             */
+            free_text_request?: string | null;
+        };
+        /**
+         * StudyScopeSelection
+         * @description Saved, confirmed study scope ready to hand over to Person 3 (Planning).
+         */
+        StudyScopeSelection: {
+            /** Selection Id */
+            selection_id: string;
+            /** Project Id */
+            project_id: string;
+            /** Student Id */
+            student_id: string;
+            /** Selected Topic Ids */
+            selected_topic_ids: string[];
+            /** Selected Resource Ids */
+            selected_resource_ids: string[];
+            /** Free Text Request */
+            free_text_request?: string | null;
+            /**
+             * Unresolved Queries
+             * @description Queries not matched to known curriculum
+             */
+            unresolved_queries?: string[];
+            /** Confirmed At */
+            confirmed_at: string;
         };
         /**
          * SupportMode
@@ -907,6 +1125,242 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_projects_api_v1_curricula_projects_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Local-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectPublic"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_project_api_v1_curricula_projects_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Local-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_project_api_v1_curricula_projects__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Local-Token"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_study_scope_api_v1_curricula_projects__project_id__scope_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Local-Token"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyScopeSelection"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_study_scope_api_v1_curricula_projects__project_id__scope_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Local-Token"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudyScopeSave"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyScopeSelection"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_resource_preview_api_v1_curricula_resources__resource_id__preview_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Local-Token"?: string | null;
+            };
+            path: {
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourcePreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_retrieval_api_v1_curricula_retrieval_get: {
+        parameters: {
+            query: {
+                topic_id: string;
+                objective: string;
+                curriculum_id?: string | null;
+                k?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceMatch"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
