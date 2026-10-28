@@ -1,5 +1,12 @@
 import { api } from '../../lib/api'
-import type { AttemptBatchReceipt, LearningStateResponse, QuizQuestion } from './types'
+import type {
+  AttemptBatchReceipt,
+  DashboardOverviewResponse,
+  LearningStateResponse,
+  QuizHistoryResponse,
+  QuizQuestion,
+  QuizRecommendationResponse,
+} from './types'
 
 export interface QuestionsQueryOptions {
   skill_id?: string
@@ -54,12 +61,58 @@ export async function submitAttemptBatch(
   })
 }
 
+export interface ProgressEventPayload {
+  expected_revision: number
+  plan_id: string
+  work_item_id: string
+  event_type: 'completed' | 'missed'
+  actual_minutes?: number | null
+}
+
+export interface ProgressEventReceipt {
+  event_id: string
+  goal_id: string
+  plan_id: string
+  work_item_id: string
+  event_type: 'completed' | 'missed'
+  actual_minutes: number | null
+  work_item_state: 'pending' | 'missed' | 'completed'
+  new_revision: number
+  occurred_at: string
+}
+
+export async function recordProgressEvent(
+  goalId: string,
+  payload: ProgressEventPayload,
+  idempotencyKey: string
+): Promise<ProgressEventReceipt> {
+  return api<ProgressEventReceipt>(`/goals/${goalId}/progress-events`, {
+    method: 'POST',
+    headers: {
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
 export async function fetchLearningState(
   goalId: string,
   skillId?: string
 ): Promise<LearningStateResponse> {
   const qs = skillId ? `?skill_id=${encodeURIComponent(skillId)}` : ''
   return api<LearningStateResponse>(`/goals/${goalId}/learning-state${qs}`)
+}
+
+export async function fetchRecommendation(goalId: string): Promise<QuizRecommendationResponse> {
+  return api<QuizRecommendationResponse>(`/goals/${goalId}/recommendation`)
+}
+
+export async function fetchQuizHistory(goalId: string): Promise<QuizHistoryResponse> {
+  return api<QuizHistoryResponse>(`/goals/${goalId}/quiz-history`)
+}
+
+export async function fetchDashboard(goalId: string): Promise<DashboardOverviewResponse> {
+  return api<DashboardOverviewResponse>(`/goals/${goalId}/dashboard`)
 }
 
 export interface GoalDetails {
@@ -77,3 +130,4 @@ export interface GoalDetails {
 export async function fetchGoal(goalId: string): Promise<GoalDetails> {
   return api<GoalDetails>(`/goals/${goalId}`)
 }
+

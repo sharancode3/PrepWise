@@ -1,5 +1,6 @@
 from app.features.progress.routes import router
 from app.features.progress.service import ProgressService
+from app.features.progress.recommendation import RecommendationService
 from app.features.progress.scoring import (
     classify_evidence,
     compute_skill_evidence,
@@ -12,6 +13,7 @@ from app.features.progress.scoring import (
 __all__ = [
     "router",
     "ProgressService",
+    "RecommendationService",
     "classify_evidence",
     "compute_skill_evidence",
     "normalize_choice",

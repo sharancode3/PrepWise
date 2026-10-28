@@ -226,3 +226,165 @@ class ProgressRepository:
             .where(T["work_items"].c.id == work_item_id)
             .values(state=state)
         )
+
+    @staticmethod
+    def get_prerequisite_topic_ids(session: Session, curriculum_id: str, topic_id: str) -> list[str]:
+        query = select(T["prerequisites"].c.prerequisite_topic_id).where(
+            T["prerequisites"].c.curriculum_id == curriculum_id,
+            T["prerequisites"].c.topic_id == topic_id,
+        )
+        return [r[0] for r in session.execute(query).fetchall()]
+
+    @staticmethod
+    def get_skills_for_topics(session: Session, curriculum_id: str, topic_ids: list[str]) -> list[dict[str, Any]]:
+        if not topic_ids:
+            return []
+        query = select(T["skills"]).where(
+            T["skills"].c.curriculum_id == curriculum_id,
+            T["skills"].c.topic_id.in_(topic_ids),
+        )
+        return [dict(r) for r in session.execute(query).mappings()]
+
+    @staticmethod
+    def get_unseen_questions(
+        session: Session,
+        curriculum_id: str,
+        student_id: str,
+        skill_ids: list[str] | None = None,
+        difficulty: int | None = None,
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
+        attempted_subq = (
+            select(T["attempts"].c.question_id)
+            .where(T["attempts"].c.student_id == student_id)
+            .scalar_subquery()
+        )
+        filters = [
+            T["skills"].c.curriculum_id == curriculum_id,
+            T["questions"].c.reviewed == 1,
+            T["questions"].c.id.not_in(attempted_subq),
+        ]
+        if skill_ids:
+            filters.append(T["questions"].c.skill_id.in_(skill_ids))
+        if difficulty is not None:
+            filters.append(T["questions"].c.difficulty == difficulty)
+
+        query = (
+            select(
+                T["questions"].c.id.label("question_id"),
+                T["questions"].c.skill_id,
+                T["questions"].c.prompt,
+                T["questions"].c.options_json,
+                T["questions"].c.difficulty,
+                T["questions"].c.form,
+            )
+            .select_from(T["questions"].join(T["skills"], T["questions"].c.skill_id == T["skills"].c.id))
+            .where(*filters)
+            .order_by(T["questions"].c.difficulty.asc(), T["questions"].c.id.asc())
+            .limit(limit)
+        )
+        return [dict(r) for r in session.execute(query).mappings()]
+
+    @staticmethod
+    def get_reviewed_questions_any(
+        session: Session,
+        curriculum_id: str,
+        skill_ids: list[str] | None = None,
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
+        filters = [
+            T["skills"].c.curriculum_id == curriculum_id,
+            T["questions"].c.reviewed == 1,
+        ]
+        if skill_ids:
+            filters.append(T["questions"].c.skill_id.in_(skill_ids))
+
+        query = (
+            select(
+                T["questions"].c.id.label("question_id"),
+                T["questions"].c.skill_id,
+                T["questions"].c.prompt,
+                T["questions"].c.options_json,
+                T["questions"].c.difficulty,
+                T["questions"].c.form,
+            )
+            .select_from(T["questions"].join(T["skills"], T["questions"].c.skill_id == T["skills"].c.id))
+            .where(*filters)
+            .order_by(T["questions"].c.id.asc())
+            .limit(limit)
+        )
+        return [dict(r) for r in session.execute(query).mappings()]
+
+    @staticmethod
+    def get_attempts_for_goal(session: Session, student_id: str, goal_id: str) -> list[dict[str, Any]]:
+        query = (
+            select(
+                T["attempts"].c.id,
+                T["attempts"].c.batch_id,
+                T["attempts"].c.student_id,
+                T["attempts"].c.goal_id,
+                T["attempts"].c.skill_id,
+                T["attempts"].c.question_id,
+                T["attempts"].c.selected_option,
+                T["attempts"].c.correct,
+                T["attempts"].c.hints_used,
+                T["attempts"].c.is_independent_evidence,
+                T["attempts"].c.submitted_at,
+                T["questions"].c.answer_option.label("correct_option"),
+                T["questions"].c.explanation,
+                T["skills"].c.title.label("skill_title"),
+            )
+            .select_from(
+                T["attempts"]
+                .join(T["questions"], T["attempts"].c.question_id == T["questions"].c.id)
+                .join(T["skills"], T["attempts"].c.skill_id == T["skills"].c.id)
+            )
+            .where(
+                T["attempts"].c.student_id == student_id,
+                T["attempts"].c.goal_id == goal_id,
+            )
+            .order_by(T["attempts"].c.submitted_at.desc(), T["attempts"].c.id.desc())
+        )
+        return [dict(r) for r in session.execute(query).mappings()]
+
+    @staticmethod
+    def get_active_plan(session: Session, goal_id: str) -> dict[str, Any] | None:
+        query = select(T["plan_versions"]).where(
+            T["plan_versions"].c.goal_id == goal_id,
+            T["plan_versions"].c.status == "active",
+        )
+        row = session.execute(query).mappings().first()
+        return dict(row) if row else None
+
+    @staticmethod
+    def get_plan_entries_with_items(session: Session, plan_id: str) -> list[dict[str, Any]]:
+        query = (
+            select(
+                T["plan_entries"].c.id.label("entry_id"),
+                T["plan_entries"].c.plan_id,
+                T["plan_entries"].c.work_item_id,
+                T["plan_entries"].c.study_date,
+                T["plan_entries"].c.sequence,
+                T["plan_entries"].c.duration_minutes,
+                T["plan_entries"].c.activity_json,
+                T["work_items"].c.kind,
+                T["work_items"].c.unit_key,
+                T["work_items"].c.state,
+                T["work_items"].c.skill_id,
+            )
+            .select_from(
+                T["plan_entries"].join(T["work_items"], T["plan_entries"].c.work_item_id == T["work_items"].c.id)
+            )
+            .where(T["plan_entries"].c.plan_id == plan_id)
+            .order_by(T["plan_entries"].c.study_date.asc(), T["plan_entries"].c.sequence.asc())
+        )
+        return [dict(r) for r in session.execute(query).mappings()]
+
+    @staticmethod
+    def get_plan_events(session: Session, plan_id: str) -> list[dict[str, Any]]:
+        query = (
+            select(T["progress_events"])
+            .where(T["progress_events"].c.plan_id == plan_id)
+            .order_by(T["progress_events"].c.occurred_at.asc())
+        )
+        return [dict(r) for r in session.execute(query).mappings()]

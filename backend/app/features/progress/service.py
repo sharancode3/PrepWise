@@ -1,21 +1,29 @@
 from datetime import datetime, timezone
 import json
 from uuid import uuid4
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import owned_goal
 from app.contracts.domain import AttemptBatch, ProgressCommand, SkillEvidence
 from app.core.errors import AppError
 from app.core.mutations import atomic_write
+from app.db.models import Base
 from app.features.progress.fixtures import seed_dev_fixture_questions
+from app.features.progress.recommendation import RecommendationService
 from app.features.progress.repository import ProgressRepository
 from app.features.progress.schemas import (
     AttemptBatchReceipt,
     AttemptItemResult,
+    DashboardOverviewResponse,
     LearningStateResponse,
     ProgressEventReceipt,
     QuestionPublic,
     QuestionsResponse,
+    QuizHistoryItem,
+    QuizHistoryResponse,
+    QuizRecommendationResponse,
+    WorkItemSummary,
 )
 from app.features.progress.scoring import (
     classify_evidence,
@@ -359,3 +367,218 @@ class ProgressService:
             skills=evidence_items,
             items=evidence_items,
         )
+
+    @staticmethod
+    def get_recommendation(
+        session: Session,
+        goal_id: str,
+        student_id: str,
+    ) -> QuizRecommendationResponse:
+        """
+        Generate a deterministic next-quiz recommendation based on Policy v1 skill evidence.
+        Adapts to question availability and returns factual explanations.
+        """
+        return RecommendationService.get_recommendation(
+            session=session,
+            goal_id=goal_id,
+            student_id=student_id,
+        )
+
+    @staticmethod
+    def get_quiz_history(
+        session: Session,
+        goal_id: str,
+        student_id: str,
+    ) -> QuizHistoryResponse:
+        """
+        Reconstruct durable quiz history from persisted attempts table grouped by batch_id.
+        """
+        owned_goal(session, goal_id, student_id)
+        attempts = ProgressRepository.get_attempts_for_goal(session, student_id, goal_id)
+        if not attempts:
+            return QuizHistoryResponse(goal_id=goal_id, batches=[], total_quizzes=0, total_questions_attempted=0, average_accuracy=None)
+
+        batches_dict: dict[str, list[dict[str, Any]]] = {}
+        for a in attempts:
+            b_id = a["batch_id"]
+            if b_id not in batches_dict:
+                batches_dict[b_id] = []
+            batches_dict[b_id].append(a)
+
+        history_items: list[QuizHistoryItem] = []
+        total_correct = 0
+        total_attempts = 0
+
+        for b_id, b_attempts in batches_dict.items():
+            sub_at = b_attempts[0]["submitted_at"]
+            q_count = len(b_attempts)
+            c_count = sum(1 for a in b_attempts if a["correct"] == 1)
+            total_correct += c_count
+            total_attempts += q_count
+            pct = int(round(100 * c_count / q_count)) if q_count > 0 else 0
+
+            sk_ids = list(dict.fromkeys(a["skill_id"] for a in b_attempts))
+            sk_titles = list(dict.fromkeys(a["skill_title"] for a in b_attempts))
+            indep = sum(1 for a in b_attempts if a["is_independent_evidence"] == 1)
+            supp = q_count - indep
+            summary = f"{indep} independent, {supp} supported" if supp > 0 else f"{indep} independent"
+
+            results = [
+                AttemptItemResult(
+                    question_id=a["question_id"],
+                    skill_id=a["skill_id"],
+                    selected_option=a["selected_option"],
+                    correct=bool(a["correct"]),
+                    correct_option=a["correct_option"],
+                    explanation=a["explanation"],
+                    hints_used=a["hints_used"],
+                    evidence_type="independent" if a["is_independent_evidence"] == 1 else "supported",
+                    attempt_id=a["id"],
+                )
+                for a in b_attempts
+            ]
+
+            history_items.append(
+                QuizHistoryItem(
+                    batch_id=b_id,
+                    submitted_at=sub_at,
+                    skill_ids=sk_ids,
+                    skill_titles=sk_titles,
+                    question_count=q_count,
+                    correct_count=c_count,
+                    score_percent=pct,
+                    evidence_type_summary=summary,
+                    items=results,
+                )
+            )
+
+        avg_acc = round(total_correct / total_attempts, 2) if total_attempts > 0 else None
+
+        return QuizHistoryResponse(
+            goal_id=goal_id,
+            batches=history_items,
+            total_quizzes=len(history_items),
+            total_questions_attempted=total_attempts,
+            average_accuracy=avg_acc,
+        )
+
+    @staticmethod
+    def get_dashboard(
+        session: Session,
+        goal_id: str,
+        student_id: str,
+    ) -> DashboardOverviewResponse:
+        """
+        Produce a compact, factual dashboard overview combining active plan completion tracking,
+        curriculum skill evidence, and evidence-based recommendation.
+        """
+        goal = owned_goal(session, goal_id, student_id)
+        curriculum_id = goal["curriculum_id"]
+
+        # Student input revision
+        student_row = session.execute(
+            select(Base.metadata.tables["students"].c.input_revision).where(
+                Base.metadata.tables["students"].c.id == student_id
+            )
+        ).scalar_one_or_none()
+        current_rev = student_row if student_row is not None else 0
+
+        # Learning state & skills
+        curriculum_skills = ProgressRepository.get_curriculum_skills(session, curriculum_id)
+        skill_evidence: list[SkillEvidence] = []
+        assessed_skills_count = 0
+        for s in curriculum_skills:
+            attempts = ProgressRepository.get_student_skill_attempts(session, student_id, s["id"])
+            ev_dict = compute_skill_evidence(s["id"], attempts)
+            ev = SkillEvidence(**ev_dict)
+            skill_evidence.append(ev)
+            if ev.independent_count > 0:
+                assessed_skills_count += 1
+
+        # Recommendation
+        recommendation = RecommendationService.get_recommendation(session, goal_id, student_id)
+
+        # Active plan
+        active_plan = ProgressRepository.get_active_plan(session, goal_id)
+        scheduled_items: list[WorkItemSummary] = []
+        completed_work_items_count = 0
+        total_work_items_count = 0
+        planned_minutes_completed = 0
+        total_planned_minutes = 0
+        actual_minutes_recorded = 0
+
+        if active_plan:
+            plan_id = active_plan["id"]
+            entries = ProgressRepository.get_plan_entries_with_items(session, plan_id)
+            events = ProgressRepository.get_plan_events(session, plan_id)
+
+            actual_mins_map: dict[str, int] = {}
+            for ev in events:
+                if ev.get("actual_minutes") is not None:
+                    actual_mins_map[ev["work_item_id"]] = ev["actual_minutes"]
+                    actual_minutes_recorded += ev["actual_minutes"]
+
+            completed_item_ids: set[str] = set()
+            for r in entries:
+                total_work_items_count += 1
+                total_planned_minutes += r["duration_minutes"]
+
+                if r["state"] == "completed":
+                    completed_item_ids.add(r["work_item_id"])
+                    planned_minutes_completed += r["duration_minutes"]
+
+                activity = json.loads(r["activity_json"]) if isinstance(r["activity_json"], str) else (r["activity_json"] or {})
+                title = activity.get("title", f"{r['kind'].capitalize()} study")
+
+                scheduled_items.append(
+                    WorkItemSummary(
+                        work_item_id=r["work_item_id"],
+                        plan_id=plan_id,
+                        title=title,
+                        kind=r["kind"],
+                        study_date=r["study_date"],
+                        sequence=r["sequence"],
+                        duration_minutes=r["duration_minutes"],
+                        state=r["state"],
+                        actual_minutes=actual_mins_map.get(r["work_item_id"]),
+                        skill_id=r["skill_id"],
+                    )
+                )
+
+            completed_work_items_count = len(completed_item_ids)
+
+        latest_quiz_score: dict[str, Any] | None = None
+        history = ProgressService.get_quiz_history(session, goal_id, student_id)
+        if history.batches:
+            latest_b = history.batches[0]
+            latest_quiz_score = {
+                "batch_id": latest_b.batch_id,
+                "submitted_at": latest_b.submitted_at,
+                "correct_count": latest_b.correct_count,
+                "question_count": latest_b.question_count,
+                "score_percent": latest_b.score_percent,
+                "skill_titles": latest_b.skill_titles,
+            }
+
+        return DashboardOverviewResponse(
+            goal_id=goal_id,
+            goal_title=goal["title"],
+            deadline=goal["deadline"],
+            has_active_plan=active_plan is not None,
+            active_plan_id=active_plan["id"] if active_plan else None,
+            active_plan_version=active_plan["version"] if active_plan else None,
+            current_revision=current_rev,
+            completed_work_items_count=completed_work_items_count,
+            total_work_items_count=total_work_items_count,
+            planned_minutes_completed=planned_minutes_completed,
+            total_planned_minutes=total_planned_minutes,
+            actual_minutes_recorded=actual_minutes_recorded,
+            skills_with_independent_evidence=assessed_skills_count,
+            total_skills_count=len(curriculum_skills),
+            latest_quiz_score=latest_quiz_score,
+            scheduled_items=scheduled_items,
+            skill_evidence=skill_evidence,
+            recommendation=recommendation,
+            disclaimer="Completion tracks participation. Assessments show recent demonstrated performance.",
+        )
+

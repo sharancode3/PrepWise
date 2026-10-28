@@ -5,9 +5,12 @@ from app.api.deps import current_student, get_session, idempotency_key, owned_go
 from app.contracts.domain import AttemptBatch, ProgressCommand
 from app.features.progress.schemas import (
     AttemptBatchReceipt,
+    DashboardOverviewResponse,
     LearningStateResponse,
     ProgressEventReceipt,
     QuestionsResponse,
+    QuizHistoryResponse,
+    QuizRecommendationResponse,
 )
 from app.features.progress.service import ProgressService
 
@@ -92,3 +95,43 @@ def state(
         student_id=student["id"],
         skill_id=skill_id,
     )
+
+
+@router.get("/goals/{goal_id}/recommendation", response_model=QuizRecommendationResponse)
+def recommendation(
+    goal_id: str,
+    student=Depends(current_student),
+    session=Depends(get_session),
+):
+    return ProgressService.get_recommendation(
+        session=session,
+        goal_id=goal_id,
+        student_id=student["id"],
+    )
+
+
+@router.get("/goals/{goal_id}/quiz-history", response_model=QuizHistoryResponse)
+def history(
+    goal_id: str,
+    student=Depends(current_student),
+    session=Depends(get_session),
+):
+    return ProgressService.get_quiz_history(
+        session=session,
+        goal_id=goal_id,
+        student_id=student["id"],
+    )
+
+
+@router.get("/goals/{goal_id}/dashboard", response_model=DashboardOverviewResponse)
+def dashboard(
+    goal_id: str,
+    student=Depends(current_student),
+    session=Depends(get_session),
+):
+    return ProgressService.get_dashboard(
+        session=session,
+        goal_id=goal_id,
+        student_id=student["id"],
+    )
+

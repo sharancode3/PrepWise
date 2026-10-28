@@ -830,3 +830,168 @@ def test_unseen_questions_pool_exhaustion(progress_env):
     assert data2["question_pool_exhausted"] is True
     assert res2.headers.get("X-Question-Pool-Exhausted") == "true"
 
+
+# ==============================================================================
+# STAGE 6 & 7 RECOMMENDATION, HISTORY & DASHBOARD TESTS
+# ==============================================================================
+
+def test_recommendation_fresh_check_on_new_goal(progress_env):
+    """When a student has no attempts, recommendation recommends a fresh check with neutral difficulty."""
+    client, _ = progress_env
+    auth = create_student_headers(client)
+    goal_res = client.post("/api/v1/goals", headers=auth["headers"], json=goal_payload())
+    goal_id = goal_res.json()["goal_id"]
+
+    res = client.get(f"/api/v1/goals/{goal_id}/recommendation", headers=auth["headers"])
+    assert res.status_code == 200, res.text
+    rec = res.json()
+
+    assert rec["action"] == "fresh_check"
+    assert rec["reason_code"] in ("no_evidence", "limited_evidence")
+    assert rec["effective_difficulty"] == 3
+    assert rec["difficulty_label"] == "practice"
+    assert "fresh questions are needed" in rec["factual_explanation"]
+    assert rec["available_count"] > 0
+    assert not rec["is_supported_practice_only"]
+    assert len(rec["questions"]) > 0
+
+
+def test_recommendation_needs_attention_targeted_quiz(progress_env):
+    """When a student demonstrates low performance on a skill (>=3 attempts, <=40%), recommendation suggests a targeted quiz."""
+    client, _ = progress_env
+    auth = create_student_headers(client)
+    goal_res = client.post("/api/v1/goals", headers=auth["headers"], json=goal_payload())
+    goal_id = goal_res.json()["goal_id"]
+
+    # Submit 3 attempts on range-bounds with 0 correct (dev-fix-range-1, dev-fix-range-2, dev-fix-range-3)
+    # dev-fix-range-1 correct is 'a', choose 'b'
+    # dev-fix-range-2 correct is 'b', choose 'a'
+    # dev-fix-range-3 correct is 'b', choose 'a'
+    batch_res = client.post(
+        f"/api/v1/goals/{goal_id}/attempt-batches",
+        headers={**auth["headers"], "Idempotency-Key": str(uuid4())},
+        json={
+            "expected_revision": 1,
+            "items": [
+                {"question_id": "dev-fix-range-1", "selected_option": "b", "hints_used": 0},
+                {"question_id": "dev-fix-range-2", "selected_option": "b", "hints_used": 0},
+                {"question_id": "dev-fix-range-3", "selected_option": "b", "hints_used": 0},
+            ],
+        },
+    )
+    assert batch_res.status_code == 201
+
+    rec_res = client.get(f"/api/v1/goals/{goal_id}/recommendation", headers=auth["headers"])
+    assert rec_res.status_code == 200, rec_res.text
+    rec = rec_res.json()
+
+    assert rec["action"] == "targeted_quiz"
+    assert rec["reason_code"] == "needs_attention"
+    assert rec["priority_skill_id"] == "range-bounds"
+    assert rec["effective_difficulty"] == 2
+    assert rec["difficulty_label"] == "introductory"
+    assert "0 correct answers across 3 independent questions" in rec["factual_explanation"]
+
+
+def test_quiz_history_tracking(progress_env):
+    """Quiz history reconstructs persisted batches and displays scores, timestamps, and item details."""
+    client, _ = progress_env
+    auth = create_student_headers(client)
+    goal_res = client.post("/api/v1/goals", headers=auth["headers"], json=goal_payload())
+    goal_id = goal_res.json()["goal_id"]
+
+    # Initially empty history
+    h0 = client.get(f"/api/v1/goals/{goal_id}/quiz-history", headers=auth["headers"])
+    assert h0.status_code == 200
+    assert h0.json()["total_quizzes"] == 0
+    assert h0.json()["batches"] == []
+
+    # Submit a batch of 2 questions: 1 correct, 1 incorrect
+    sub_res = client.post(
+        f"/api/v1/goals/{goal_id}/attempt-batches",
+        headers={**auth["headers"], "Idempotency-Key": str(uuid4())},
+        json={
+            "expected_revision": 1,
+            "items": [
+                {"question_id": "dev-fix-range-1", "selected_option": "a", "hints_used": 0},  # Correct ('a')
+                {"question_id": "dev-fix-range-2", "selected_option": "b", "hints_used": 0},  # Incorrect (correct is 'a')
+            ],
+        },
+    )
+    assert sub_res.status_code == 201
+
+    h1 = client.get(f"/api/v1/goals/{goal_id}/quiz-history", headers=auth["headers"])
+    assert h1.status_code == 200, h1.text
+    data = h1.json()
+    assert data["total_quizzes"] == 1
+    assert data["total_questions_attempted"] == 2
+    assert data["average_accuracy"] == 0.5
+
+    batch = data["batches"][0]
+    assert batch["question_count"] == 2
+    assert batch["correct_count"] == 1
+    assert batch["score_percent"] == 50
+    assert "2 independent" in batch["evidence_type_summary"]
+    assert len(batch["items"]) == 2
+
+
+def test_dashboard_overview_endpoint(progress_env):
+    """Dashboard combines real active plan work items, completion events, skill evidence, and recommendations."""
+    client, db = progress_env
+    auth = create_student_headers(client)
+    student_id = auth["student"]["student_id"]
+    goal_res = client.post("/api/v1/goals", headers=auth["headers"], json=goal_payload())
+    goal_id = goal_res.json()["goal_id"]
+
+    plan_id, work_item_id = setup_active_plan(db, goal_id, student_id)
+
+    # Record a completion progress event
+    ev_res = client.post(
+        f"/api/v1/goals/{goal_id}/progress-events",
+        headers={**auth["headers"], "Idempotency-Key": str(uuid4())},
+        json={
+            "expected_revision": 1,
+            "plan_id": plan_id,
+            "work_item_id": work_item_id,
+            "event_type": "completed",
+            "actual_minutes": 25,
+        },
+    )
+    assert ev_res.status_code == 201
+
+    # Fetch dashboard
+    dash_res = client.get(f"/api/v1/goals/{goal_id}/dashboard", headers=auth["headers"])
+    assert dash_res.status_code == 200, dash_res.text
+    dash = dash_res.json()
+
+    assert dash["has_active_plan"] is True
+    assert dash["active_plan_id"] == plan_id
+    assert dash["completed_work_items_count"] == 1
+    assert dash["total_work_items_count"] == 1
+    assert dash["planned_minutes_completed"] == 20
+    assert dash["actual_minutes_recorded"] == 25
+    assert len(dash["scheduled_items"]) == 1
+    assert dash["scheduled_items"][0]["state"] == "completed"
+    assert dash["scheduled_items"][0]["actual_minutes"] == 25
+
+    # Check evidence & recommendation
+    assert len(dash["skill_evidence"]) > 0
+    assert dash["recommendation"] is not None
+    assert "Completion tracks participation." in dash["disclaimer"]
+
+
+def test_student_isolation_on_new_endpoints(progress_env):
+    """Another student cannot read recommendations, quiz history, or dashboard of another student's goal."""
+    client, _ = progress_env
+    student_a = create_student_headers(client, "Student A")
+    student_b = create_student_headers(client, "Student B")
+
+    goal_res = client.post("/api/v1/goals", headers=student_a["headers"], json=goal_payload())
+    goal_id = goal_res.json()["goal_id"]
+
+    # Student B attempts to access Student A's goal
+    for ep in ["recommendation", "quiz-history", "dashboard"]:
+        res = client.get(f"/api/v1/goals/{goal_id}/{ep}", headers=student_b["headers"])
+        assert res.status_code == 404
+
+

@@ -8,14 +8,22 @@ import { fetchLearningState } from './progress-api'
 import { QuizPlayer } from './QuizPlayer'
 import { QuizResult } from './QuizResult'
 import { QuizSetup } from './QuizSetup'
-import type { AttemptBatchReceipt, LearningStateResponse, QuizConfig, QuizQuestion, QuizStep } from './types'
+import type { AttemptBatchReceipt, LearningStateResponse, QuizConfig, QuizDifficulty, QuizQuestion, QuizStep } from './types'
 import './progress.css'
 
 interface ProgressQuizFlowProps {
   initialGoalId?: string
+  initialSkillId?: string
+  initialDifficulty?: QuizDifficulty
+  onReturnToDashboard?: () => void
 }
 
-export function ProgressQuizFlow({ initialGoalId }: ProgressQuizFlowProps) {
+export function ProgressQuizFlow({
+  initialGoalId,
+  initialSkillId,
+  initialDifficulty,
+  onReturnToDashboard,
+}: ProgressQuizFlowProps) {
   const [goalId, setGoalId] = useState<string>(() => initialGoalId || localStorage.getItem('learnnova.goal-id') || '')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [learningState, setLearningState] = useState<LearningStateResponse | null>(null)
@@ -114,7 +122,12 @@ export function ProgressQuizFlow({ initialGoalId }: ProgressQuizFlowProps) {
   return (
     <div className="quiz-flow-wrapper">
       {step === 'setup' && (
-        <QuizSetup goalId={goalId} onStartQuiz={handleStartQuiz} />
+        <QuizSetup
+          goalId={goalId}
+          onStartQuiz={handleStartQuiz}
+          initialSkillId={initialSkillId}
+          initialDifficulty={initialDifficulty}
+        />
       )}
 
       {step === 'playing' && activeConfig && (

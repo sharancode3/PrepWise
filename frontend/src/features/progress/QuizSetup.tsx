@@ -9,9 +9,18 @@ import type { LearningStateResponse, QuizConfig, QuizDifficulty, QuizMode, QuizQ
 interface QuizSetupProps {
   goalId: string
   onStartQuiz: (config: QuizConfig, questions: QuizQuestion[]) => void
+  initialSkillId?: string
+  initialDifficulty?: QuizDifficulty
+  initialMode?: QuizMode
 }
 
-export function QuizSetup({ goalId, onStartQuiz }: QuizSetupProps) {
+export function QuizSetup({
+  goalId,
+  onStartQuiz,
+  initialSkillId,
+  initialDifficulty,
+  initialMode,
+}: QuizSetupProps) {
   const [goal, setGoal] = useState<GoalDetails | null>(null)
   const [learningState, setLearningState] = useState<LearningStateResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -19,9 +28,9 @@ export function QuizSetup({ goalId, onStartQuiz }: QuizSetupProps) {
 
   // Form State
   const [selectedTopic, setSelectedTopic] = useState<string>('')
-  const [selectedSkill, setSelectedSkill] = useState<string>('')
-  const [difficulty, setDifficulty] = useState<QuizDifficulty>('adaptive')
-  const [mode, setMode] = useState<QuizMode>('assessment')
+  const [selectedSkill, setSelectedSkill] = useState<string>(initialSkillId || '')
+  const [difficulty, setDifficulty] = useState<QuizDifficulty>(initialDifficulty || 'adaptive')
+  const [mode, setMode] = useState<QuizMode>(initialMode || 'assessment')
   const [questionCount, setQuestionCount] = useState<number>(5)
 
   // Real question availability check
