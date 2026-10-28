@@ -1,31 +1,93 @@
 {
-  "plan_id": "5976ee04-850b-445a-9b39-d7d295d52a58",
-  "goal_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8",
-  "version": 3,
-  "parent_plan_id": "92a0aa0e-fc4a-45b9-aa2f-3bac3522abef",
+  "plan_id": "a5293299-6575-4463-9e4c-e33bf3d97def",
+  "goal_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71",
+  "version": 1,
+  "parent_plan_id": null,
   "feasibility": "full",
   "generation_status": "template_only",
   "algorithm_version": "genetic-algorithm-v1",
   "policy_version": "prototype-v1",
-  "created_at": "2026-10-28T11:10:39.541000+00:00",
+  "created_at": "2026-10-28T14:12:29.939000+00:00",
   "metrics": {
-    "capacity_minutes": 325,
-    "remaining_work_minutes": 84,
-    "scheduled_minutes": 84,
+    "capacity_minutes": 345,
+    "remaining_work_minutes": 104,
+    "scheduled_minutes": 104,
     "deferred_minutes": 0,
     "minute_shortfall": 0,
     "placement_conflict_count": 0
   },
   "origin_counts": {
-    "template": 7
+    "template": 9
   },
   "entries": [
     {
-      "entry_id": "8bae9266-0ce3-4f30-8055-0deb5ff69f68",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:expressions:learn:01",
-      "topic_id": "expressions",
+      "entry_id": "d33905d2-43db-4eee-b290-f145068a0ad8",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:variables:learn:01",
+      "topic_id": "variables",
       "activity_kind": "learn",
       "date": "2026-10-28",
+      "sequence": 1,
+      "duration_minutes": 10,
+      "reason_code": "PREREQUISITE",
+      "reason_details": {
+        "unit_key": "variables:learn:01",
+        "duration": 10,
+        "topic_id": "variables",
+        "is_target": false
+      },
+      "activity": {
+        "title": "Variables: Learn",
+        "steps": [
+          "Review objective: Study core principles of Variables",
+          "Work through structured learn guide for Variables",
+          "Complete hands-on exercise (10 min)",
+          "Verify mastery against Study core principles of Variables"
+        ],
+        "expected_outcome": "Master Variables fundamentals through focused learn practice.",
+        "resource_ids": [],
+        "origin": "template",
+        "model_id": null,
+        "context_hash": "a0442742b5a701db",
+        "validation_status": "valid"
+      }
+    },
+    {
+      "entry_id": "20461b52-4b4c-4d89-b98c-ad6d14d91134",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:variables:practice:01",
+      "topic_id": "variables",
+      "activity_kind": "practice",
+      "date": "2026-10-28",
+      "sequence": 2,
+      "duration_minutes": 10,
+      "reason_code": "PREREQUISITE",
+      "reason_details": {
+        "unit_key": "variables:practice:01",
+        "duration": 10,
+        "topic_id": "variables",
+        "is_target": false
+      },
+      "activity": {
+        "title": "Variables: Practice",
+        "steps": [
+          "Review objective: Study core principles of Variables",
+          "Work through structured practice guide for Variables",
+          "Complete hands-on exercise (10 min)",
+          "Verify mastery against Study core principles of Variables"
+        ],
+        "expected_outcome": "Master Variables fundamentals through focused practice practice.",
+        "resource_ids": [],
+        "origin": "template",
+        "model_id": null,
+        "context_hash": "378fca3d29cf2c82",
+        "validation_status": "valid"
+      }
+    },
+    {
+      "entry_id": "98cb77b9-4f43-438a-9df4-df2ebc39f146",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:expressions:learn:01",
+      "topic_id": "expressions",
+      "activity_kind": "learn",
+      "date": "2026-10-29",
       "sequence": 1,
       "duration_minutes": 10,
       "reason_code": "PREREQUISITE",
@@ -52,11 +114,11 @@
       }
     },
     {
-      "entry_id": "12813ecc-9267-47c1-8f36-c13673e70203",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:expressions:practice:01",
+      "entry_id": "97d1a0a9-8920-4b07-8063-148cf82cdf3c",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:expressions:practice:01",
       "topic_id": "expressions",
       "activity_kind": "practice",
-      "date": "2026-10-28",
+      "date": "2026-10-29",
       "sequence": 2,
       "duration_minutes": 10,
       "reason_code": "PREREQUISITE",
@@ -83,12 +145,12 @@
       }
     },
     {
-      "entry_id": "6fad4e8d-19f1-4840-aad9-47568a286ce4",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:conditions:learn:01",
+      "entry_id": "f7a4bace-a536-4a60-99a1-536d0989627e",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:conditions:learn:01",
       "topic_id": "conditions",
       "activity_kind": "learn",
       "date": "2026-10-29",
-      "sequence": 1,
+      "sequence": 3,
       "duration_minutes": 10,
       "reason_code": "GOAL_TARGET",
       "reason_details": {
@@ -114,12 +176,12 @@
       }
     },
     {
-      "entry_id": "7da316cb-f416-4a79-bb95-cc9568ae72e8",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:conditions:practice:01",
+      "entry_id": "75a33882-c7fd-4df9-8f7b-d51ff879c3cb",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:conditions:practice:01",
       "topic_id": "conditions",
       "activity_kind": "practice",
       "date": "2026-10-29",
-      "sequence": 2,
+      "sequence": 4,
       "duration_minutes": 9,
       "reason_code": "GOAL_TARGET",
       "reason_details": {
@@ -145,12 +207,12 @@
       }
     },
     {
-      "entry_id": "e89ce3c7-001b-4e48-bf8f-5bea9a051904",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:loops:learn:01",
+      "entry_id": "a1771a4a-d2de-4b2b-967f-080582739209",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:loops:learn:01",
       "topic_id": "loops",
       "activity_kind": "learn",
-      "date": "2026-10-29",
-      "sequence": 3,
+      "date": "2026-10-31",
+      "sequence": 1,
       "duration_minutes": 15,
       "reason_code": "GOAL_TARGET",
       "reason_details": {
@@ -176,12 +238,12 @@
       }
     },
     {
-      "entry_id": "e942a408-4c05-432b-86c4-5842771a9bdd",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:loops:practice:01",
+      "entry_id": "f227f881-fcd1-4bee-b0dd-6679981ea9a7",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:loops:practice:01",
       "topic_id": "loops",
       "activity_kind": "practice",
       "date": "2026-10-31",
-      "sequence": 1,
+      "sequence": 2,
       "duration_minutes": 20,
       "reason_code": "GOAL_TARGET",
       "reason_details": {
@@ -207,12 +269,12 @@
       }
     },
     {
-      "entry_id": "1d20e86c-2675-4357-abdf-5a9135c28c2f",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:loops:assess:01",
+      "entry_id": "5f5a9730-7a65-45a0-979d-87161a364cff",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:loops:assess:01",
       "topic_id": "loops",
       "activity_kind": "assess",
       "date": "2026-10-31",
-      "sequence": 2,
+      "sequence": 3,
       "duration_minutes": 10,
       "reason_code": "GOAL_TARGET",
       "reason_details": {
@@ -240,25 +302,10 @@
   ],
   "deferred": [],
   "assumptions": [],
-  "completed_history": [
-    {
-      "event_id": "639c5001-f71a-4561-91b4-622197cfd24d",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:variables:learn:01",
-      "plan_id": "716a4f0f-b37f-4dab-a690-ab18375cd7b0",
-      "occurred_at": "2026-10-28T11:10:05.092828+00:00",
-      "actual_minutes": 10
-    },
-    {
-      "event_id": "87f4e23e-5910-4fd1-b2ab-4d2d37113332",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:variables:practice:01",
-      "plan_id": "716a4f0f-b37f-4dab-a690-ab18375cd7b0",
-      "occurred_at": "2026-10-28T11:10:05.108785+00:00",
-      "actual_minutes": 10
-    }
-  ],
+  "completed_history": [],
   "overlay": {
-    "input_revision": 5,
-    "current_revision": 7,
+    "input_revision": 2,
+    "current_revision": 5,
     "is_stale": true
   }
 }

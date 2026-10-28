@@ -1,28 +1,90 @@
 {
-  "plan_id": "38f7a764-4dac-465d-84ca-caac3f851254",
-  "goal_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8",
-  "version": 4,
-  "parent_plan_id": "5976ee04-850b-445a-9b39-d7d295d52a58",
+  "plan_id": "5ed55145-afc4-477b-833e-2bc0cd46286f",
+  "goal_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71",
+  "version": 2,
+  "parent_plan_id": "a5293299-6575-4463-9e4c-e33bf3d97def",
   "feasibility": "full",
   "generation_status": "template_only",
   "algorithm_version": "genetic-algorithm-v1",
   "policy_version": "prototype-v1",
-  "created_at": "2026-10-28T11:10:39.664000+00:00",
+  "created_at": "2026-10-28T14:12:30.502000+00:00",
   "metrics": {
-    "capacity_minutes": 305,
-    "remaining_work_minutes": 64,
-    "scheduled_minutes": 64,
+    "capacity_minutes": 325,
+    "remaining_work_minutes": 84,
+    "scheduled_minutes": 84,
     "deferred_minutes": 0,
     "minute_shortfall": 0,
     "placement_conflict_count": 0
   },
   "origin_counts": {
-    "template": 5
+    "template": 7
   },
   "entries": [
     {
-      "entry_id": "10885495-867b-48a8-8da9-c2f5ea3ca1a5",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:conditions:learn:01",
+      "entry_id": "7c5fcfee-db0a-44af-8fdc-38f59c0013a2",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:expressions:learn:01",
+      "topic_id": "expressions",
+      "activity_kind": "learn",
+      "date": "2026-10-28",
+      "sequence": 1,
+      "duration_minutes": 10,
+      "reason_code": "PREREQUISITE",
+      "reason_details": {
+        "unit_key": "expressions:learn:01",
+        "duration": 10,
+        "topic_id": "expressions",
+        "is_target": false
+      },
+      "activity": {
+        "title": "Expressions: Learn",
+        "steps": [
+          "Review objective: Study core principles of Expressions",
+          "Work through structured learn guide for Expressions",
+          "Complete hands-on exercise (10 min)",
+          "Verify mastery against Study core principles of Expressions"
+        ],
+        "expected_outcome": "Master Expressions fundamentals through focused learn practice.",
+        "resource_ids": [],
+        "origin": "template",
+        "model_id": null,
+        "context_hash": "534fa2b9bcb710af",
+        "validation_status": "valid"
+      }
+    },
+    {
+      "entry_id": "db01e332-11d3-46a9-914e-77321d87090d",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:expressions:practice:01",
+      "topic_id": "expressions",
+      "activity_kind": "practice",
+      "date": "2026-10-28",
+      "sequence": 2,
+      "duration_minutes": 10,
+      "reason_code": "PREREQUISITE",
+      "reason_details": {
+        "unit_key": "expressions:practice:01",
+        "duration": 10,
+        "topic_id": "expressions",
+        "is_target": false
+      },
+      "activity": {
+        "title": "Expressions: Practice",
+        "steps": [
+          "Review objective: Study core principles of Expressions",
+          "Work through structured practice guide for Expressions",
+          "Complete hands-on exercise (10 min)",
+          "Verify mastery against Study core principles of Expressions"
+        ],
+        "expected_outcome": "Master Expressions fundamentals through focused practice practice.",
+        "resource_ids": [],
+        "origin": "template",
+        "model_id": null,
+        "context_hash": "652d246bd15752c2",
+        "validation_status": "valid"
+      }
+    },
+    {
+      "entry_id": "97c03999-c824-48ff-be23-17fa4e2d38f8",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:conditions:learn:01",
       "topic_id": "conditions",
       "activity_kind": "learn",
       "date": "2026-10-29",
@@ -52,8 +114,8 @@
       }
     },
     {
-      "entry_id": "56223fe5-3b4e-4bfa-8aea-4c9e06fda1b9",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:conditions:practice:01",
+      "entry_id": "4f0678a3-0a5d-4835-93f7-e71bd2c58d12",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:conditions:practice:01",
       "topic_id": "conditions",
       "activity_kind": "practice",
       "date": "2026-10-29",
@@ -83,8 +145,8 @@
       }
     },
     {
-      "entry_id": "d38b9290-5dd6-4787-a847-d2c39d0cf87a",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:loops:learn:01",
+      "entry_id": "38534183-969a-49ac-84c1-ba0e9ed5d878",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:loops:learn:01",
       "topic_id": "loops",
       "activity_kind": "learn",
       "date": "2026-10-29",
@@ -114,8 +176,8 @@
       }
     },
     {
-      "entry_id": "dff63e79-5ab6-48ee-8a76-976a6e3d15d9",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:loops:practice:01",
+      "entry_id": "e246f252-2d37-493b-8393-9cc6c049c64d",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:loops:practice:01",
       "topic_id": "loops",
       "activity_kind": "practice",
       "date": "2026-10-31",
@@ -145,8 +207,8 @@
       }
     },
     {
-      "entry_id": "df4d0016-0269-4e2e-acb9-9e2250c3e2d0",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:loops:assess:01",
+      "entry_id": "f24ad4ac-32b7-4a4a-9d06-b6192a5b0315",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:loops:assess:01",
       "topic_id": "loops",
       "activity_kind": "assess",
       "date": "2026-10-31",
@@ -180,37 +242,23 @@
   "assumptions": [],
   "completed_history": [
     {
-      "event_id": "639c5001-f71a-4561-91b4-622197cfd24d",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:variables:learn:01",
-      "plan_id": "716a4f0f-b37f-4dab-a690-ab18375cd7b0",
-      "occurred_at": "2026-10-28T11:10:05.092828+00:00",
+      "event_id": "d59d30cc-1121-4861-a058-5f0949e1ead3",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:variables:learn:01",
+      "plan_id": "a5293299-6575-4463-9e4c-e33bf3d97def",
+      "occurred_at": "2026-10-28T14:12:30.114132+00:00",
       "actual_minutes": 10
     },
     {
-      "event_id": "87f4e23e-5910-4fd1-b2ab-4d2d37113332",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:variables:practice:01",
-      "plan_id": "716a4f0f-b37f-4dab-a690-ab18375cd7b0",
-      "occurred_at": "2026-10-28T11:10:05.108785+00:00",
-      "actual_minutes": 10
-    },
-    {
-      "event_id": "4a35dfa3-399f-44ed-9b5e-c7dc8f27a224",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:expressions:learn:01",
-      "plan_id": "5976ee04-850b-445a-9b39-d7d295d52a58",
-      "occurred_at": "2026-10-28T11:10:39.588758+00:00",
-      "actual_minutes": 10
-    },
-    {
-      "event_id": "d13fa5e1-88f8-40c9-8c53-3fe9332c7c4c",
-      "work_item_id": "ad6f94a1-49d5-4a4e-a650-d0ffa88eaae8:expressions:practice:01",
-      "plan_id": "5976ee04-850b-445a-9b39-d7d295d52a58",
-      "occurred_at": "2026-10-28T11:10:39.600525+00:00",
+      "event_id": "76b518e6-5d04-4cdd-8598-034e5115c577",
+      "work_item_id": "b09c3b95-c358-45e6-9ad4-d12508e89b71:variables:practice:01",
+      "plan_id": "a5293299-6575-4463-9e4c-e33bf3d97def",
+      "occurred_at": "2026-10-28T14:12:30.158877+00:00",
       "actual_minutes": 10
     }
   ],
   "overlay": {
-    "input_revision": 7,
-    "current_revision": 7,
+    "input_revision": 5,
+    "current_revision": 5,
     "is_stale": false
   }
 }
