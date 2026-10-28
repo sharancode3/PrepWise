@@ -1,1 +1,19 @@
+from app.features.progress.routes import router
+from app.features.progress.service import ProgressService
+from app.features.progress.scoring import (
+    classify_evidence,
+    compute_skill_evidence,
+    normalize_choice,
+    score_single_choice,
+    validate_selected_option,
+)
 
+__all__ = [
+    "router",
+    "ProgressService",
+    "classify_evidence",
+    "compute_skill_evidence",
+    "normalize_choice",
+    "score_single_choice",
+    "validate_selected_option",
+]
