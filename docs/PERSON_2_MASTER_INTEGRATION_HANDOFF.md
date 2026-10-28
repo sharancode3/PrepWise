@@ -368,15 +368,58 @@ npm run build
 | **Duration Conservation** | Durations cannot be arbitrary. Sum of session minutes must equal plan total ($140\text{ min}$ for v1, $155\text{ min}$ for v2). | Preserved completed sessions must retain their original minutes. |
 | **Local File Memory Boundary** | Browsers cannot store raw `File` handles in `localStorage`. | Metadata is saved in storage; if refreshed, display an honest note prompting the user to re-select local files for preview. |
 | **Verbatim Inquiries** | Students enter specific prompts (e.g. *"Focus on loops"*). | Do not pretend AI parsed this in mock mode; save it verbatim in `StudyScopePayload.inquiry`. |
-| **Preserve Completed Work on Replan** | Replanning should not erase already-completed study sessions. | Plan v2 strictly preserves sessions marked completed in Plan v1. |
+## 8. Horizontal Study Checklist Architecture & Layout Reference
+
+The study timeline implements the milestone checklist layout reference requested by the team:
+
+```
+0% [Start] ──┬────────────────┬───────────────┬────────────────┬───────── [End] 100%
+             │                │               │                │
+             │ (long: 96px)   │ (short: 44px) │ (long: 108px)  │ (short: 48px)
+             ▼                ▼               ▼                ▼
+            (●)              (●)             (●)              (●)
+        ┌─────────┐      ┌─────────┐     ┌─────────┐      ┌─────────┐
+        │☑ Title 1│      │☐ Title 2│     │☐ Title 3│      │☐ Title 4│
+        │Day 1·15m│      │Day 1·15m│     │Day 2·15m│      │Day 2·20m│
+        │Inspect →│      │Inspect →│     │Inspect →│      │Inspect →│
+        └─────────┘      └─────────┘     └─────────┘      └─────────┘
+```
+
+### Component Structure & Props:
+The component resides in [`frontend/src/features/curriculum/StudyTimeline.tsx`](file:///c:/Users/gjaya/OneDrive/Desktop/PROJECTS/TCS-Hackathon/frontend/src/features/curriculum/StudyTimeline.tsx).
+
+```typescript
+export interface StudyTimelineProps {
+  plan: SimulatedPlan | null;
+  projectTitle: string;
+  topics?: CurriculumTopic[];
+  availableVersions?: number[];
+  activeVersion?: number;
+  onSelectVersion?: (version: number) => void;
+  onToggleSession: (entryId: string, completed: boolean) => Promise<void>;
+  onReplanWithRequest?: (request: ReplanRequest) => Promise<void>;
+  onSimulateReplan?: () => Promise<void>;
+  onBackToScope?: () => void;
+}
+```
+
+### UI Features:
+1. **0% and 100% Endpoints**: Anchored with vertical connector lines and circular dot markers.
+2. **Continuous Horizontal Rail**: Stretches across the full width with a 3px blue progress fill (`.checklist-rail-progress`) calculating `(completedCount / totalCount) * 100%`.
+3. **Staggered Rhythm Connectors**: Uses `STAGGER_CONNECTOR_HEIGHTS = [96, 44, 108, 48, 92, 44, 104, 48]` to alternate connector lengths and prevent card collisions.
+4. **Interactive Milestone Inspection**: Clicking any milestone card opens an actionable inspection drawer revealing actionable session steps, expected outcomes, and grounded citations.
+5. **Honest Metric**: Strictly labeled `Sessions completed: X of Y (Z%)` with an explicit anti-hallucination disclaimer.
+6. **Narrow Screen Handling**: Uses `overflow-x: auto` with a minimum milestone column width (`220px`) to provide horizontal scrolling without shrinking cards or clipping labels.
 
 ---
 
-## 8. Contact & Next Steps for the Lead Integrator
+## 9. Contact & Next Steps for the Lead Integrator
 
-All code is committed on branch `person-2` (`6536182`) and pushed to `origin/person-2`.
+All code is committed on branch `person-2` (latest commit `d281d85`) and pushed to `origin/person-2`.
 
 When merging or integrating:
 1. **Merge `person-2` into `main`:** Fast-forward or clean merge; all schemas in `openapi.json` and `api-schema.d.ts` are unified.
 2. **Mount the Route:** The feature is mounted at `/curriculum` in `frontend/src/App.tsx`.
-3. **Connect Shared State:** If a global student project store is introduced, pass `selectedProjectId` to `<CurriculumPage />`.
+3. **Direct Timeline / Checklist Access:** Navigating to `/curriculum` and selecting the **`Study plan`** tab displays the **Horizontal Study Checklist** immediately.
+4. **Connect Shared State:** If a global student project store is introduced, pass `selectedProjectId` to `<CurriculumPage />`.
+
