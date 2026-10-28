@@ -32,6 +32,7 @@ export interface AttemptBatchReceipt {
 
 export interface SkillEvidence {
   skill_id: string
+  topic_id?: string
   independent_count: number
   supported_count: number
   performance_estimate: number | null

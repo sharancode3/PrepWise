@@ -24,10 +24,6 @@ class RecommendationService:
         goal = owned_goal(session, goal_id, student_id)
         curriculum_id = goal["curriculum_id"]
 
-        # Ensure seed fixture exists if no reviewed questions are loaded
-        if ProgressRepository.count_reviewed_questions(session, curriculum_id) == 0:
-            seed_dev_fixture_questions(session)
-
         # Get all skills in curriculum
         curriculum_skills = ProgressRepository.get_curriculum_skills(session, curriculum_id)
         if not curriculum_skills:

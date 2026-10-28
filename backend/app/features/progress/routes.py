@@ -61,6 +61,7 @@ def attempts(
 def questions(
     goal_id: str,
     response: Response,
+    topic_id: str | None = Query(None, description="Optional topic ID filter"),
     skill_id: str | None = Query(None, description="Optional skill ID filter"),
     form: str | None = Query(None, description="Question form filter: baseline, followup, practice"),
     difficulty: int | None = Query(None, ge=1, le=5, description="Difficulty filter between 1 and 5"),
@@ -72,6 +73,7 @@ def questions(
         session=session,
         goal_id=goal_id,
         student_id=student["id"],
+        topic_id=topic_id,
         skill_id=skill_id,
         form=form,
         difficulty=difficulty,

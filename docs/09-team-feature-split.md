@@ -8,11 +8,11 @@ No personal names are assumed. Replace member labels with actual names at handof
 
 | Person | Feature | Owned outcome |
 |---|---|---|
-| Member 1: project owner | C — Grounded AI learning activities + final integration | Model-generated activities, prompt/output validation, study UI and final application wiring |
+| Member 1: project owner | C — Grounded AI learning activities, plan explanations + final integration | Model-generated activities, evidence-backed explanation wording, prompt/output validation, study UI and final application wiring |
 | Member 2 | A — Curriculum and resources | Reliable curriculum graph, seed content and relevant source retrieval |
 | Member 3 | B — Personalized planning | Goal/availability setup, valid versioned schedules, feasibility and replanning |
 | Member 4 | D — Learning progress and adaptation evidence | Saved completion/assessment evidence and actionable learner state |
-| Member 5 | E — Plan explanations, comparison and export | Understandable changes, accurate summaries and portable outputs |
+| Member 5 | E — Plan comparison and export | Accurate before/after changes, factual summaries and portable outputs |
 
 UI/UX follows [document 12](12-ui-ux-design-system.md). Each person delivers the UI for their own feature using the shared shell, components, tokens and API client. Planning owns /setup and /plan; curriculum owns /curriculum; activities owns /study; progress owns /progress; insights owns /changes. Shared identity remains foundation-owned. No person is assigned all frontend work.
 
@@ -50,7 +50,7 @@ Member 3 owns this implementation. The project owner retains shared contract and
 
 ## 4. Feature C — Grounded AI learning activities
 
-Owns features/activities, prompt versions, structured output validation, template fallback and content cache policy. No need for its own public route: the agent calls the service internally.
+Owns features/activities, prompt versions, structured output validation, template fallback, content cache policy and user-facing plan explanation wording grounded in saved reason codes and evidence. No need for its own public route: the agent calls the service internally.
 
 Inputs: fixed TaskContext batch, allowed resources from A, evidence summary from D and generation budget. Outputs: one ActivityResult per requested task with provenance and validation status; invalid/missing responses produce explicit template results.
 
@@ -68,20 +68,21 @@ Acceptance: completion does not equal mastery; duplicate requests do not inflate
 
 Dependencies: shared DB/identity/idempotency. D defines assessment semantics documented in 06; B must not implement a second contradictory estimator. No free-form LLM grading in the core.
 
-## 6. Feature E — Explanations, comparison and export
+## 6. Feature E — Comparison and export
 
-Owns features/insights, version comparison and export routes, deterministic summaries and evidence-backed explanation assembly.
+Owns features/insights, version comparison and export routes, and deterministic factual summaries. Member 1 owns user-facing plan explanations and explanation wording. E passes through saved reason codes and evidence references without generating explanation prose.
 
 Inputs: immutable parent/new plan entries, work states, reason codes and evidence references. Outputs: PlanChange list, counts, feasibility summary, CSV/JSON for a specific version.
 
 Acceptance: moved/added/deferred/removed/resized classified correctly; unchanged work not falsely described as a change; CSV handles commas/newlines/formula prefixes; scheduled coverage is not called mastery; no invented improvements or model provenance.
 
-Dependencies: B's saved plan and D's evidence references. E can prepare a comparison fixture immediately after handoff. Does not reimplement scheduler or change generated instructions.
+Dependencies: B's saved plan and D's evidence references. E can prepare a comparison fixture immediately after handoff. Does not reimplement scheduler, write explanation prose, or change generated instructions.
 
 ## 7. Shared-file and integration policy
 
 - Owner only: shared contracts, models, baseline migration, settings, router registry, job infrastructure.
 - Feature owners: their directory, route module, tests and assigned seed portions.
+- Member 5 changes only the comparison/export feature folders and its own feature tests. Other members' code, prompts, pages, and shared files are not changed; any shared contract, routing, or explanation change is handed to Member 1 for integration.
 - All DB writes go through existing service transaction helpers. No raw global Session.
 - Changes to shared DTOs require a small agreed update, not field aliases added independently.
 - No teammate adds a new model framework, DB service or frontend dependency without integration owner approval.

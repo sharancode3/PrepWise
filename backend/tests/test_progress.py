@@ -634,6 +634,27 @@ def test_progress_events_validation_and_idempotency(progress_env):
     assert second.status_code == 201
     assert second.json() == first.json()
 
+    # 4. Duplicate event occurrence with a new idempotency key is a 200 no-op that does not advance revision
+    cmd_duplicate = {
+        "expected_revision": 2,
+        "plan_id": plan_id,
+        "work_item_id": work_item_id,
+        "event_type": "completed",
+        "actual_minutes": 20,
+    }
+    third = client.post(
+        f"/api/v1/goals/{goal_id}/progress-events",
+        headers={**auth["headers"], "Idempotency-Key": str(uuid4())},
+        json=cmd_duplicate,
+    )
+    assert third.status_code == 200
+    assert third.json()["new_revision"] == 2
+    with db.sessions() as session:
+        current_rev = session.execute(
+            select(T["students"].c.input_revision).where(T["students"].c.id == auth["student"]["student_id"])
+        ).scalar_one()
+        assert current_rev == 2
+
     # Verify only one event in DB
     with db.sessions() as session:
         events = session.execute(select(T["progress_events"]).where(T["progress_events"].c.goal_id == goal_id)).fetchall()

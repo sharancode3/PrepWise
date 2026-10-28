@@ -434,3 +434,65 @@ class ProgressEvents(Base):
     plan_versions: Mapped['PlanVersions'] = relationship('PlanVersions')
     goals: Mapped['Goals'] = relationship('Goals')
     work_items: Mapped['WorkItems'] = relationship('WorkItems')
+
+
+class LearningProjects(Base):
+    __tablename__ = 'learning_projects'
+    __table_args__ = (
+        ForeignKeyConstraint(['student_id'], ['students.id']),
+        ForeignKeyConstraint(['curriculum_id'], ['curricula.id']),
+        ForeignKeyConstraint(['goal_id'], ['goals.id']),
+    )
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    student_id: Mapped[str] = mapped_column(Text, nullable=False)
+    curriculum_id: Mapped[str] = mapped_column(Text, nullable=False)
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    goal_id: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("strftime('%Y-%m-%dT%H:%M:%fZ','now')"))
+    updated_at: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("strftime('%Y-%m-%dT%H:%M:%fZ','now')"))
+
+
+class StudyScopes(Base):
+    __tablename__ = 'study_scopes'
+    __table_args__ = (
+        CheckConstraint('json_valid(selected_topics_json)'),
+        CheckConstraint('json_valid(selected_resources_json)'),
+        ForeignKeyConstraint(['project_id'], ['learning_projects.id'], ondelete='CASCADE'),
+        ForeignKeyConstraint(['student_id'], ['students.id']),
+        UniqueConstraint('project_id'),
+    )
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    project_id: Mapped[str] = mapped_column(Text, nullable=False)
+    student_id: Mapped[str] = mapped_column(Text, nullable=False)
+    selected_topics_json: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'[]'"))
+    selected_resources_json: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'[]'"))
+    free_text_request: Mapped[Optional[str]] = mapped_column(Text)
+    confirmed_at: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("strftime('%Y-%m-%dT%H:%M:%fZ','now')"))
+
+
+class ResourceUploads(Base):
+    __tablename__ = 'resource_uploads'
+    __table_args__ = (
+        ForeignKeyConstraint(['student_id'], ['students.id']),
+        ForeignKeyConstraint(['project_id'], ['learning_projects.id'], ondelete='CASCADE'),
+        ForeignKeyConstraint(['curriculum_id'], ['curricula.id']),
+        UniqueConstraint('student_id', 'content_hash'),
+    )
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    student_id: Mapped[str] = mapped_column(Text, nullable=False)
+    project_id: Mapped[Optional[str]] = mapped_column(Text)
+    curriculum_id: Mapped[Optional[str]] = mapped_column(Text)
+    topic_id: Mapped[Optional[str]] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    original_filename: Mapped[str] = mapped_column(Text, nullable=False)
+    mime_type: Mapped[str] = mapped_column(Text, nullable=False)
+    byte_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    extracted_text: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
+    processing_status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'indexed'"))
+    error_message: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("strftime('%Y-%m-%dT%H:%M:%fZ','now')"))

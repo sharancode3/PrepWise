@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   AlertCircle,
   ArrowRight,
@@ -41,11 +42,19 @@ import './progress.css'
 type ProgressTab = 'overview' | 'quiz' | 'history'
 
 export function ProgressPage() {
-  const [goalId, setGoalId] = useState<string>(
-    () => localStorage.getItem('learnnova.goal-id') || ''
-  )
+  const [searchParams] = useSearchParams()
+  const queryGoalId = searchParams.get('goal_id') || searchParams.get('goalId')
+  const queryTab = searchParams.get('tab')
+  const querySkill = searchParams.get('skill') || searchParams.get('skill_id')
+
+  const [goalId, setGoalId] = useState<string>(() => {
+    return queryGoalId || localStorage.getItem('learnnova.goal-id') || ''
+  })
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [activeTab, setActiveTab] = useState<ProgressTab>('overview')
+  const [activeTab, setActiveTab] = useState<ProgressTab>(() => {
+    if (queryTab === 'quiz' || queryTab === 'history') return queryTab
+    return 'overview'
+  })
 
   // Dashboard Data State
   const [dashboard, setDashboard] = useState<DashboardOverviewResponse | null>(null)
@@ -54,7 +63,7 @@ export function ProgressPage() {
   const [error, setError] = useState<string>('')
 
   // Pre-configured quiz params when starting from recommendation or skill card
-  const [targetSkillId, setTargetSkillId] = useState<string | undefined>(undefined)
+  const [targetSkillId, setTargetSkillId] = useState<string | undefined>(querySkill || undefined)
   const [targetDifficulty, setTargetDifficulty] = useState<QuizDifficulty | undefined>(undefined)
 
   // Completion Tracking State per Work Item
@@ -78,13 +87,32 @@ export function ProgressPage() {
     }
   }, [])
 
-  // Check goal ID from storage if needed
+  // Reactively synchronize goal ID across query params and localStorage
   useEffect(() => {
-    if (!goalId) {
-      const stored = localStorage.getItem('learnnova.goal-id')
-      if (stored) setGoalId(stored)
+    if (queryGoalId && queryGoalId !== goalId) {
+      setGoalId(queryGoalId)
+      localStorage.setItem('learnnova.goal-id', queryGoalId)
     }
+  }, [queryGoalId, goalId])
+
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'learnnova.goal-id' && e.newValue && e.newValue !== goalId) {
+        setGoalId(e.newValue)
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
   }, [goalId])
+
+  useEffect(() => {
+    if (queryTab === 'quiz' || queryTab === 'history' || queryTab === 'overview') {
+      setActiveTab(queryTab)
+    }
+    if (querySkill) {
+      setTargetSkillId(querySkill)
+    }
+  }, [queryTab, querySkill])
 
   // Load Dashboard & History
   const loadDashboardData = (currentGoalId: string) => {
@@ -115,6 +143,10 @@ export function ProgressPage() {
   }
 
   useEffect(() => {
+    setDashboard(null)
+    setHistory(null)
+    setActionError(null)
+    setExpandedBatchId(null)
     if (goalId) {
       loadDashboardData(goalId)
     } else {

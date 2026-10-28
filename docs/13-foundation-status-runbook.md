@@ -72,7 +72,7 @@ Do not edit the frozen baseline migration. Add a reviewed new revision for schem
 | Member 2 | features/curriculum | features/curriculum; /curriculum | Resource views, vector cache, embedding retrieval and graph review |
 | Member 3 | features/planning | features/planning; /setup, /plan | Extend saved goals; task graph, scheduler, validator, agent and job admission |
 | Member 4 | features/progress | features/progress; /progress | Reviewed checks, completion events, evidence projection and persistence |
-| Member 5 | features/insights | features/insights; /changes | Before/after reasons, feasibility summary and CSV/JSON export |
+| Member 5 | features/insights | features/insights; /changes | Before/after comparison, factual feasibility summary and CSV/JSON export; Member 1 owns explanation wording |
 
 Goal save and basic curriculum read already exist. Their owners extend them rather than rebuilding them. All UI follows document 12. The owner handles small shared route registrations; teammates supply isolated route components.
 

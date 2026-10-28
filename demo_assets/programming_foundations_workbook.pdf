@@ -1,0 +1,247 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 905 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(WORKBOOK: WORKED EXAMPLES AND TRACING) Tj
+T*
+(PrepWise Synthetic Demo Material - Systematic State Tracing Guide) Tj
+T*
+(==================================================================) Tj
+T*
+() Tj
+T*
+(2.1 The Purpose of Trace Tables) Tj
+T*
+(When analyzing complex control flow, tracing state variable-by-variable) Tj
+T*
+(prevents logic errors and uncovers off-by-one boundary failures.) Tj
+T*
+() Tj
+T*
+(2.2 Methodology for Constructing a Trace Table) Tj
+T*
+(1. List all state variables and loop guards as column headers.) Tj
+T*
+(2. Record row 0 as the initial state before loop entry.) Tj
+T*
+(3. For each iteration, evaluate the loop guard condition.) Tj
+T*
+(4. Record new values in the row only when an assignment occurs.) Tj
+T*
+(5. Continue until the loop guard evaluates to False.) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 1 of 4) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 1163 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(WORKBOOK: WORKED EXAMPLES AND TRACING) Tj
+T*
+(PrepWise Synthetic Demo Material - Worked Example 1: While-Loop Trace) Tj
+T*
+(=====================================================================) Tj
+T*
+() Tj
+T*
+(Given the following code snippet:) Tj
+T*
+(    total = 0) Tj
+T*
+(    num = 2) Tj
+T*
+(    while num <= 6:) Tj
+T*
+(        total += num) Tj
+T*
+(        num += 2) Tj
+T*
+() Tj
+T*
+(Trace Table Analysis:) Tj
+T*
+(Step  | num  | num <= 6? | total \(before\) | total += num | num += 2) Tj
+T*
+(------------------------------------------------------------------) Tj
+T*
+(Init  | 2    | \(entry\)   | 0              | -            | -) Tj
+T*
+(Iter1 | 2    | True      | 0              | 2            | 4) Tj
+T*
+(Iter2 | 4    | True      | 2              | 6            | 6) Tj
+T*
+(Iter3 | 6    | True      | 6              | 12           | 8) Tj
+T*
+(Exit  | 8    | False     | 12             | -            | -) Tj
+T*
+() Tj
+T*
+(Final Values at Program Termination:) Tj
+T*
+(total = 12, num = 8 \(Note that num reaches 8 to falsify the condition!\).) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 2 of 4) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+8 0 obj
+<< /Length 1022 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(WORKBOOK: WORKED EXAMPLES AND TRACING) Tj
+T*
+(PrepWise Synthetic Demo Material - Common Pitfalls and Bug Catalog) Tj
+T*
+(==================================================================) Tj
+T*
+() Tj
+T*
+(Pitfall 1: Off-By-One Bound in range\(\)) Tj
+T*
+(Bug: range\(1, 5\) iterates 4 times with values 1, 2, 3, 4.) Tj
+T*
+(If you need 1 through 5 inclusive, use range\(1, 6\).) Tj
+T*
+() Tj
+T*
+(Pitfall 2: Re-initializing the Accumulator Inside the Loop) Tj
+T*
+(Bug: Putting total = 0 inside the while block resets the accumulator) Tj
+T*
+(on every iteration, leaving only the final element's value.) Tj
+T*
+() Tj
+T*
+(Pitfall 3: Inadvertent Infinite Loop) Tj
+T*
+(Bug: Incrementing the wrong variable or placing counter increment) Tj
+T*
+(inside an if block that fails to trigger.) Tj
+T*
+(    while i < 10:) Tj
+T*
+(        if i % 2 == 0:) Tj
+T*
+(            i += 1  # If i is odd, it becomes an infinite loop!) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 3 of 4) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+10 0 obj
+<< /Length 926 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(WORKBOOK: WORKED EXAMPLES AND TRACING) Tj
+T*
+(PrepWise Synthetic Demo Material - Practice Exercises with Rubrics) Tj
+T*
+(==================================================================) Tj
+T*
+() Tj
+T*
+(Exercise A: Factorial Product Accumulator) Tj
+T*
+(Problem: Write a loop computing n! for n = 5.) Tj
+T*
+(Rubric:) Tj
+T*
+(- Initialized product to 1 \(not 0\): 2 pts) Tj
+T*
+(- Correct loop guard \(counter <= n or counter > 0\): 2 pts) Tj
+T*
+(- Monotonic decrement/increment of counter: 1 pt) Tj
+T*
+() Tj
+T*
+(Exercise B: Identify the Termination Bug) Tj
+T*
+(Snippet:) Tj
+T*
+(    k = 10) Tj
+T*
+(    while k > 0:) Tj
+T*
+(        print\(k\)) Tj
+T*
+(        # Missing: k -= 1) Tj
+T*
+(Diagnostic: k is never modified; condition k > 0 is perpetually True.) Tj
+T*
+(Correction: Insert k -= 1 inside the loop body.) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 4 of 4) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 10 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000134 00000 n 
+0000000204 00000 n 
+0000001160 00000 n 
+0000001286 00000 n 
+0000002501 00000 n 
+0000002627 00000 n 
+0000003701 00000 n 
+0000003827 00000 n 
+0000004805 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+4933
+%%EOF

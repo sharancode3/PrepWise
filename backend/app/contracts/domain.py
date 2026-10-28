@@ -84,10 +84,34 @@ class AvailabilityReplace(Contract):
     availability: list[AvailabilityInput] = Field(max_length=30)
 
 
+class GoalUpdate(Contract):
+    expected_revision: int = Field(ge=0, strict=True)
+    title: str = Field(min_length=1, max_length=120)
+    goal_text: str = Field(default="", max_length=1000)
+    start_date: date
+    deadline: date
+    targets: list[TargetInput] | None = Field(default=None, max_length=30)
+    availability: list[AvailabilityInput] = Field(max_length=30)
+    max_session_minutes: int | None = Field(default=25, ge=15, le=45)
+    preferred_pace: Literal["balanced", "intensive", "relaxed"] | None = "balanced"
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if not 1 <= (self.deadline - self.start_date).days + 1 <= 30:
+            raise ValueError("Choose a horizon of 1–30 days inclusive")
+        if self.targets is not None:
+            if len({t.topic_id for t in self.targets}) != len(self.targets):
+                raise ValueError("Target topics must be unique")
+        validate_availability(self.availability, self.start_date, self.deadline)
+        return self
+
+
 class PlanJobCreate(Contract):
     expected_revision: int = Field(ge=0, strict=True)
     mode: Literal["generate", "replan"]
     base_plan_id: str | None = None
+    max_session_minutes: int | None = Field(default=25, ge=15, le=45)
+    preferred_pace: Literal["balanced", "intensive", "relaxed"] | None = "balanced"
 
 
 class ProgressCommand(Contract):
@@ -125,6 +149,7 @@ class ResourceMatch(Contract):
 
 class SkillEvidence(Contract):
     skill_id: str
+    topic_id: str | None = None
     independent_count: int = Field(ge=0)
     supported_count: int = Field(ge=0)
     performance_estimate: float | None = Field(default=None, ge=0, le=1)

@@ -33,6 +33,11 @@ def atomic_write(session: Session, student_id: str, key: str, method: str, path:
         if advance_revision:
             session.execute(update(students).where(students.c.id == student_id).values(input_revision=next_revision))
         status, body = operation(session, next_revision)
+        if advance_revision and (
+            (isinstance(body, dict) and body.get("new_revision") == expected_revision)
+            or (status == 200 and method == "POST" and "progress-events" in path)
+        ):
+            session.execute(update(students).where(students.c.id == student_id).values(input_revision=expected_revision))
         session.execute(receipts.insert().values(student_id=student_id, idempotency_key=key, method=method, path=path, request_hash=digest, response_status=status, response_json=json.dumps(body)))
         session.commit()
         return status, body

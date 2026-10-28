@@ -22,7 +22,7 @@ class Database:
             with self.engine.connect() as connection:
                 if not inspect(connection).has_table("alembic_version"):
                     return False
-                return connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one_or_none() == "0001_foundation"
+                return connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one_or_none() in ("0001_foundation", "0002_projects_and_scopes")
         except Exception:
             return False
 

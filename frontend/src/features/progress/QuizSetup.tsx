@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ArrowRight, BookOpen, Layers, ShieldCheck, Sparkles } from 'lucide-react'
 import { Button, Eyebrow, Notice, Panel } from '../../components/ui'
+import { api } from '../../lib/api'
 import { fetchGoal, fetchQuestions, fetchLearningState } from './progress-api'
 import type { GoalDetails } from './progress-api'
 import type { LearningStateResponse, QuizConfig, QuizDifficulty, QuizMode, QuizQuestion } from './types'
@@ -23,6 +24,7 @@ export function QuizSetup({
 }: QuizSetupProps) {
   const [goal, setGoal] = useState<GoalDetails | null>(null)
   const [learningState, setLearningState] = useState<LearningStateResponse | null>(null)
+  const [curriculumTopics, setCurriculumTopics] = useState<Array<{ id: string; title: string }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
 
@@ -55,6 +57,19 @@ export function QuizSetup({
         // Select first target topic by default if available
         if (goalData.targets && goalData.targets.length > 0) {
           setSelectedTopic(goalData.targets[0].topic_id)
+        }
+
+        if (goalData.curriculum_id) {
+          api<{ topics: Array<{ id: string; title: string }> }>(`/curricula/${goalData.curriculum_id}`)
+            .then((curric) => {
+              if (active && curric?.topics) {
+                setCurriculumTopics(curric.topics)
+                if ((!goalData.targets || goalData.targets.length === 0) && curric.topics.length > 0) {
+                  setSelectedTopic(curric.topics[0].id)
+                }
+              }
+            })
+            .catch(() => {})
         }
       })
       .catch((err) => {
@@ -100,6 +115,7 @@ export function QuizSetup({
     const formParam = mode === 'practice' ? 'practice' : undefined
 
     fetchQuestions(goalId, {
+      topic_id: selectedTopic || undefined,
       skill_id: selectedSkill || undefined,
       difficulty: diffParam,
       form: formParam,
@@ -109,8 +125,12 @@ export function QuizSetup({
         if (!active) return
         const count = res.questions.length
         setAvailableCount(count)
-        if (res.question_pool_exhausted || count === 0) {
-          setExhaustedNotice('All independent reviewed items matching this filter have been completed.')
+        if (count === 0) {
+          if (res.question_pool_exhausted) {
+            setExhaustedNotice('All independent reviewed items matching this filter have been completed.')
+          } else {
+            setExhaustedNotice('No reviewed questions currently exist for this topic/skill selection in the question bank.')
+          }
         } else if (count < 5) {
           setExhaustedNotice(`Coverage note: ${count} reviewed item${count === 1 ? '' : 's'} available for this selection. We never duplicate questions.`)
         }
@@ -125,7 +145,7 @@ export function QuizSetup({
     return () => {
       active = false
     }
-  }, [goalId, selectedSkill, difficulty, mode])
+  }, [goalId, selectedTopic, selectedSkill, difficulty, mode])
 
   async function handleStart(e: FormEvent) {
     e.preventDefault()
@@ -137,6 +157,7 @@ export function QuizSetup({
       const formParam = mode === 'practice' ? 'practice' : undefined
 
       const res = await fetchQuestions(goalId, {
+        topic_id: selectedTopic || undefined,
         skill_id: selectedSkill || undefined,
         difficulty: diffParam,
         form: formParam,
@@ -197,14 +218,18 @@ export function QuizSetup({
                   }}
                   className="setup-select"
                 >
-                  {goal?.targets.map((t) => (
-                    <option key={t.topic_id} value={t.topic_id}>
-                      {t.topic_id.replace('-', ' ').toUpperCase()}
-                    </option>
-                  ))}
-                  {(!goal?.targets || goal.targets.length === 0) && (
-                    <option value="loops">Loops (Default)</option>
-                  )}
+                  <option value="">All target topics</option>
+                  {goal?.targets && goal.targets.length > 0
+                    ? goal.targets.map((t) => (
+                        <option key={t.topic_id} value={t.topic_id}>
+                          {t.topic_id.replace('-', ' ').toUpperCase()}
+                        </option>
+                      ))
+                    : curriculumTopics.map((ct) => (
+                        <option key={ct.id} value={ct.id}>
+                          {ct.title || ct.id.toUpperCase()}
+                        </option>
+                      ))}
                 </select>
               </label>
 
@@ -216,13 +241,18 @@ export function QuizSetup({
                   className="setup-select"
                 >
                   <option value="">All topic skills</option>
-                  <option value="range-bounds">Range endpoints (range-bounds)</option>
-                  <option value="accumulators">Accumulators (accumulators)</option>
+                  {(learningState?.skills || [])
+                    .filter((s) => !selectedTopic || !s.topic_id || s.topic_id === selectedTopic)
+                    .map((s) => (
+                      <option key={s.skill_id} value={s.skill_id}>
+                        {s.skill_id.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} ({s.skill_id})
+                      </option>
+                    ))}
                 </select>
               </label>
             </div>
             <p className="field-help">
-              Reviewed bank source: <strong>python-foundations-v1</strong>. Core questions test specific programming understanding.
+              Reviewed bank source: <strong>{goal?.curriculum_id || 'python-foundations-v1'}</strong>. Core questions test specific programming understanding.
             </p>
           </fieldset>
 

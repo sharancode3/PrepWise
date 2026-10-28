@@ -1,0 +1,353 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 1345 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(COURSE GUIDE: PROGRAMMING FOUNDATIONS) Tj
+T*
+(PrepWise Synthetic Demo Material - Unit 1: Variables and Expressions) Tj
+T*
+(==================================================================) Tj
+T*
+() Tj
+T*
+(1.1 Memory Model and Assignment Semantics) Tj
+T*
+(In Python, an assignment statement does not copy memory bytes. Instead,) Tj
+T*
+(it binds a variable name to an object reference in memory.) Tj
+T*
+(Example:) Tj
+T*
+(    count = 10) Tj
+T*
+(    total = count) Tj
+T*
+(Both 'count' and 'total' now point to the integer object 10.) Tj
+T*
+() Tj
+T*
+(1.2 Dynamic Typing and Primitive Types) Tj
+T*
+(Variables do not have fixed static types; values do. The primary types are:) Tj
+T*
+(- int: Arbitrary precision signed integers \(e.g., -5, 0, 1024\).) Tj
+T*
+(- float: Double-precision floating point numbers \(e.g., 3.14159\).) Tj
+T*
+(- bool: True or False \(subclass of int, where True == 1\).) Tj
+T*
+(- str: Immutable Unicode character sequences.) Tj
+T*
+() Tj
+T*
+(1.3 Arithmetic Expressions and Precedence) Tj
+T*
+(Operators follow standard precedence: PEMDAS \(Parentheses, Exponents **, ) Tj
+T*
+(Multiplication/Division *, /, //, %, Addition/Subtraction +, -\).) Tj
+T*
+(Integer division \(//\) truncates toward negative infinity.) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 1 of 5) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 1339 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(COURSE GUIDE: PROGRAMMING FOUNDATIONS) Tj
+T*
+(PrepWise Synthetic Demo Material - Unit 2: Conditional Logic) Tj
+T*
+(===========================================================) Tj
+T*
+() Tj
+T*
+(2.1 Truthiness and Boolean Evaluation) Tj
+T*
+(Every Python value has an implicit boolean value in a conditional context:) Tj
+T*
+(- Falsy values: False, None, 0, 0.0, '', [], \(\), {}.) Tj
+T*
+(- Truthy values: Any non-zero number, non-empty string, or collection.) Tj
+T*
+() Tj
+T*
+(2.2 Comparison Operators and Chaining) Tj
+T*
+(Comparisons include == \(equality\), != \(inequality\), <, <=, >, >=.) Tj
+T*
+(Python supports chained comparisons: 0 <= score <= 100 is equivalent to) Tj
+T*
+(\(0 <= score\) and \(score <= 100\).) Tj
+T*
+() Tj
+T*
+(2.3 Multi-Way Branching Structure) Tj
+T*
+(The if-elif-else construct evaluates clauses sequentially from top to bottom.) Tj
+T*
+(As soon as one branch guard evaluates to True, its block executes and) Tj
+T*
+(all subsequent branches are skipped.) Tj
+T*
+() Tj
+T*
+(2.4 Short-Circuit Evaluation) Tj
+T*
+(Logical operators 'and' and 'or' evaluate operands lazily from left to right.) Tj
+T*
+(In 'A and B', if A is False, B is never evaluated.) Tj
+T*
+(In 'A or B', if A is True, B is never evaluated.) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 2 of 5) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+8 0 obj
+<< /Length 1277 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(COURSE GUIDE: PROGRAMMING FOUNDATIONS) Tj
+T*
+(PrepWise Synthetic Demo Material - Unit 3: Loops and Iteration Bounds) Tj
+T*
+(=====================================================================) Tj
+T*
+() Tj
+T*
+(3.1 While-Loop Invariants and Guard Conditions) Tj
+T*
+(A while loop repeats its indented body as long as the condition remains True.) Tj
+T*
+(The condition is checked at the entry of each iteration, not continuously.) Tj
+T*
+(Syntax:) Tj
+T*
+(    while condition:) Tj
+T*
+(        # loop body must update state to eventually falsify condition) Tj
+T*
+() Tj
+T*
+(3.2 Sentinel Values and Termination Guarantees) Tj
+T*
+(To prevent infinite loops, ensure that loop control variables make monotonic) Tj
+T*
+(progress toward a termination boundary on every iteration path.) Tj
+T*
+(Example of proper boundary check:) Tj
+T*
+(    idx = 0) Tj
+T*
+(    while idx < len\(items\):) Tj
+T*
+(        process\(items[idx]\)) Tj
+T*
+(        idx += 1  # Guaranteed progress) Tj
+T*
+() Tj
+T*
+(3.3 Loop Control: break and continue) Tj
+T*
+(- break: Terminates the innermost loop immediately.) Tj
+T*
+(- continue: Skips remainder of current iteration and jumps to guard evaluation.) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 3 of 5) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+10 0 obj
+<< /Length 1410 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(COURSE GUIDE: PROGRAMMING FOUNDATIONS) Tj
+T*
+(PrepWise Synthetic Demo Material - Unit 4: The Accumulator Pattern) Tj
+T*
+(=================================================================) Tj
+T*
+() Tj
+T*
+(4.1 Anatomical Structure of an Accumulator) Tj
+T*
+(An accumulator pattern aggregates data across multiple loop iterations.) Tj
+T*
+(It consists of three mandatory elements:) Tj
+T*
+(1. Initialization: Set the accumulator variable BEFORE the loop starts.) Tj
+T*
+(2. Update: Modify the accumulator inside the loop body using incoming items.) Tj
+T*
+(3. Result: Read the accumulated value AFTER the loop completes.) Tj
+T*
+() Tj
+T*
+(4.2 Summation vs Multiplicative Accumulators) Tj
+T*
+(- Sum accumulator must be initialized to the additive identity: 0.) Tj
+T*
+(    total = 0) Tj
+T*
+(    for x in numbers: total += x) Tj
+T*
+(- Product accumulator must be initialized to multiplicative identity: 1.) Tj
+T*
+(    product = 1) Tj
+T*
+(    for x in factors: product *= x) Tj
+T*
+(\(Warning: initializing product to 0 is a fatal zero-product bug!\)) Tj
+T*
+() Tj
+T*
+(4.3 Filtering Accumulators) Tj
+T*
+(Combines conditional statements inside the loop to accumulate only matches.) Tj
+T*
+(    evens = []) Tj
+T*
+(    for num in values:) Tj
+T*
+(        if num % 2 == 0:) Tj
+T*
+(            evens.append\(num\)) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 4 of 5) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 10 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+12 0 obj
+<< /Length 1341 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+16 TL
+(COURSE GUIDE: PROGRAMMING FOUNDATIONS) Tj
+T*
+(PrepWise Synthetic Demo Material - Unit 5: Scope and Exam Review) Tj
+T*
+(================================================================) Tj
+T*
+() Tj
+T*
+(5.1 Variable Scope and Namespaces) Tj
+T*
+(Python resolves identifiers using the LEGB hierarchy:) Tj
+T*
+(- Local: Names assigned inside the current function.) Tj
+T*
+(- Enclosing: Names defined in enclosing function closures.) Tj
+T*
+(- Global: Names defined at the module top level.) Tj
+T*
+(- Built-in: Predefined identifiers \(len, range, sum, int\).) Tj
+T*
+() Tj
+T*
+(5.2 Functions and Return Values) Tj
+T*
+(Functions without an explicit 'return' statement implicitly return None.) Tj
+T*
+(Be vigilant: printing a value \(print\(x\)\) is NOT the same as returning it.) Tj
+T*
+() Tj
+T*
+(5.3 Assessment Checklist for Foundations Exam) Tj
+T*
+([ ] Verify all while-loop index counters increment on every path.) Tj
+T*
+([ ] Double-check range\(start, stop\) excludes the stop value.) Tj
+T*
+([ ] Check list indexing bounds: index 0 to len-1 \(avoid IndexError\).) Tj
+T*
+([ ] Confirm accumulator initialization values \(0 for sum, 1 for product\).) Tj
+T*
+([ ] Test boundary conditions \(empty collections, single-item collections\).) Tj
+T*
+ET
+BT
+/F1 10 Tf
+50 40 Td
+(PrepWise Synthetic Demo Material  |  Page 5 of 5) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 12 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000141 00000 n 
+0000000211 00000 n 
+0000001608 00000 n 
+0000001734 00000 n 
+0000003125 00000 n 
+0000003251 00000 n 
+0000004580 00000 n 
+0000004706 00000 n 
+0000006169 00000 n 
+0000006297 00000 n 
+0000007691 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+7819
+%%EOF

@@ -41,6 +41,7 @@ class ProgressService:
         session: Session,
         goal_id: str,
         student_id: str,
+        topic_id: str | None = None,
         skill_id: str | None = None,
         form: str | None = None,
         difficulty: int | None = None,
@@ -70,15 +71,12 @@ class ProgressService:
             if not skill:
                 raise AppError("INPUT_INVALID", f"Skill '{skill_id}' is not in the curriculum for this goal.", 422)
 
-        # Check if reviewed questions exist in the DB for this curriculum; if empty, seed feature-owned fixture
-        if ProgressRepository.count_reviewed_questions(session, curriculum_id) == 0:
-            seed_dev_fixture_questions(session)
-
         # Query eligible questions
         rows, exhausted = ProgressRepository.get_eligible_questions(
             session=session,
             curriculum_id=curriculum_id,
             student_id=student_id,
+            topic_id=topic_id,
             skill_id=skill_id,
             form=form,
             difficulty=difficulty,
@@ -271,7 +269,7 @@ class ProgressService:
             if current_state == "completed" and body.event_type == "missed":
                 raise AppError("ALREADY_COMPLETED", "Completed work cannot be marked as missed.", 409)
 
-            # Check for existing duplicate event occurrence in this plan
+            # Check for existing duplicate event occurrence in this plan or already completed unit
             existing_event = ProgressRepository.get_existing_progress_event(db, body.plan_id, body.work_item_id, body.event_type)
             if existing_event:
                 receipt = ProgressEventReceipt(
@@ -282,8 +280,22 @@ class ProgressService:
                     event_type=existing_event["event_type"],
                     actual_minutes=existing_event["actual_minutes"],
                     work_item_state=current_state,
-                    new_revision=next_revision,
+                    new_revision=body.expected_revision,
                     occurred_at=existing_event["occurred_at"],
+                )
+                return 200, receipt.model_dump(mode="json")
+
+            if current_state == "completed" and body.event_type == "completed":
+                receipt = ProgressEventReceipt(
+                    event_id=str(uuid4()),
+                    goal_id=goal_id,
+                    plan_id=body.plan_id,
+                    work_item_id=body.work_item_id,
+                    event_type="completed",
+                    actual_minutes=body.actual_minutes,
+                    work_item_state="completed",
+                    new_revision=body.expected_revision,
+                    occurred_at=datetime.now(timezone.utc).isoformat(),
                 )
                 return 200, receipt.model_dump(mode="json")
 
@@ -360,6 +372,7 @@ class ProgressService:
         for s in skills:
             attempts = ProgressRepository.get_student_skill_attempts(session, student_id, s["id"])
             evidence_dict = compute_skill_evidence(s["id"], attempts)
+            evidence_dict["topic_id"] = s.get("topic_id")
             evidence_items.append(SkillEvidence(**evidence_dict))
 
         return LearningStateResponse(
@@ -490,6 +503,7 @@ class ProgressService:
         for s in curriculum_skills:
             attempts = ProgressRepository.get_student_skill_attempts(session, student_id, s["id"])
             ev_dict = compute_skill_evidence(s["id"], attempts)
+            ev_dict["topic_id"] = s.get("topic_id")
             ev = SkillEvidence(**ev_dict)
             skill_evidence.append(ev)
             if ev.independent_count > 0:

@@ -22,6 +22,7 @@ from app.features.curriculum.routes import router as curriculum_router
 from app.features.planning.routes import router as planning_router
 from app.features.progress.routes import router as progress_router
 from app.features.insights.routes import router as insights_router
+from app.features.activities.routes import router as activities_router, assistant_router
 from app.jobs.runner import JobRunner
 from app.providers.gateway import OllamaGateway
 
@@ -80,7 +81,7 @@ def create_app(settings=None, database=None, gateway=None):
 
     @app.get("/api/v1/capabilities", tags=["foundation"])
     def capabilities():
-        return {**app.state.gateway.capabilities(), "phase": "foundation", "features": {"profile": True, "curriculum_read": True, "goal_save": True, "planning": False, "activities": False, "assessment": False, "insights": False}}
+        return {**app.state.gateway.capabilities(), "phase": "foundation", "features": {"profile": True, "curriculum_read": True, "goal_save": True, "planning": True, "activities": True, "assistant": True, "assessment": True, "insights": True}}
 
     @app.post("/api/v1/students", response_model=StudentCreated, status_code=201, tags=["foundation"])
     def create_student(body: StudentCreate, session=Depends(get_session)):
@@ -101,7 +102,7 @@ def create_app(settings=None, database=None, gateway=None):
             raise AppError("JOB_NOT_FOUND", "This job is unavailable.", 404)
         return {"job_id": job["id"], **{k:job[k] for k in ("status", "stage", "accepted_revision", "result_plan_id", "error_code", "error_message")}}
 
-    for router in (curriculum_router, planning_router, progress_router, insights_router):
+    for router in (curriculum_router, planning_router, progress_router, insights_router, activities_router, assistant_router):
         app.include_router(router, prefix="/api/v1")
     return app
 

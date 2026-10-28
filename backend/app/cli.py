@@ -10,7 +10,7 @@ from app.features.curriculum.service import seed_curriculum
 
 def main():
     parser = argparse.ArgumentParser(description="LearnNova local foundation tools")
-    parser.add_argument("action", choices=["migrate", "seed", "export-openapi", "check-models"])
+    parser.add_argument("action", choices=["migrate", "seed", "export-openapi", "check-models", "setup-demo", "reset-demo"])
     args = parser.parse_args()
     if args.action == "migrate":
         config = Config(str(BACKEND_ROOT / "alembic.ini"))
@@ -26,6 +26,14 @@ def main():
         from app.main import create_app
         (BACKEND_ROOT / "openapi.json").write_text(json.dumps(create_app().openapi(), indent=2) + "\n", encoding="utf-8")
         print("Exported backend/openapi.json")
+    elif args.action == "setup-demo":
+        from app.features.demo.setup import setup_demo_scenario
+        res = setup_demo_scenario(force_reset=False)
+        print(json.dumps(res, indent=2))
+    elif args.action == "reset-demo":
+        from app.features.demo.setup import setup_demo_scenario
+        res = setup_demo_scenario(force_reset=True)
+        print(json.dumps(res, indent=2))
     else:
         from app.providers.gateway import OllamaGateway
         print(json.dumps(OllamaGateway(Settings()).capabilities(), indent=2))

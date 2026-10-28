@@ -1,0 +1,71 @@
+{
+  "scenario": "Prepare for my programming foundations assessment",
+  "student_id": "demo-alex-student",
+  "client_token": "demo-token-alex-prepwise-2026",
+  "questions": [
+    {
+      "id": "q1",
+      "question": "What is the memory model for assignment in Python?",
+      "scope": "Programming Foundations Course Guide",
+      "expected_source": "programming_foundations_course_guide.pdf",
+      "expected_page": 1,
+      "answerable": true
+    },
+    {
+      "id": "q2",
+      "question": "How does short-circuit evaluation work with logical and/or?",
+      "scope": "Programming Foundations Course Guide",
+      "expected_source": "programming_foundations_course_guide.pdf",
+      "expected_page": 2,
+      "answerable": true
+    },
+    {
+      "id": "q3",
+      "question": "What is the required initialization value for a product accumulator?",
+      "scope": "Programming Foundations Course Guide",
+      "expected_source": "programming_foundations_course_guide.pdf",
+      "expected_page": 4,
+      "answerable": true
+    },
+    {
+      "id": "q4",
+      "question": "What are the final values of total and num in the while-loop trace example?",
+      "scope": "Programming Foundations Workbook",
+      "expected_source": "programming_foundations_workbook.pdf",
+      "expected_page": 2,
+      "answerable": true
+    },
+    {
+      "id": "q5",
+      "question": "Why does putting total = 0 inside a while loop cause a bug?",
+      "scope": "Programming Foundations Workbook",
+      "expected_source": "programming_foundations_workbook.pdf",
+      "expected_page": 3,
+      "answerable": true
+    },
+    {
+      "id": "q6",
+      "question": "What are the key differences between while-loops and for-loops with range?",
+      "scope": "Loops and Accumulators Quick Reference",
+      "expected_source": "loops_and_accumulators_quickref.md",
+      "expected_page": null,
+      "answerable": true
+    },
+    {
+      "id": "q7_absent",
+      "question": "How do you configure an asynchronous web socket connection in FastAPI?",
+      "scope": "Programming Foundations Course Guide",
+      "expected_source": null,
+      "answerable": false,
+      "note": "Intentionally absent from foundations course guide"
+    },
+    {
+      "id": "q8_general",
+      "question": "What are the career opportunities in computer science?",
+      "scope": "general_learning",
+      "expected_source": null,
+      "answerable": true,
+      "note": "Requires explicit switch to General Learning scope"
+    }
+  ]
+}

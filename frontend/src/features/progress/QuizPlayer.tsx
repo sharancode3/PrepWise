@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, RefreshCw, Send } from 'lucide-react'
 import { Button, Notice, Panel } from '../../components/ui'
+import { api } from '../../lib/api'
+import type { Profile } from '../../lib/api'
 import { submitAttemptBatch } from './progress-api'
 import type { AttemptBatchReceipt, QuizConfig, QuizQuestion } from './types'
 
@@ -24,7 +26,7 @@ export function QuizPlayer({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [hintsUsed, setHintsUsed] = useState<Record<string, number>>({})
-  const [showHintNotice, setShowHintNotice] = useState<boolean>(false)
+  const [revealedHints, setRevealedHints] = useState<Record<string, boolean>>({})
 
   // Confirmation & submission state
   const [confirmingSubmit, setConfirmingSubmit] = useState(false)
@@ -48,12 +50,37 @@ export function QuizPlayer({
 
   function handleUseHint() {
     if (config.mode !== 'practice') return
-    const currentHints = hintsUsed[currentQuestion.question_id] || 0
+    const qid = currentQuestion.question_id
+    setRevealedHints((prev) => ({
+      ...prev,
+      [qid]: true,
+    }))
     setHintsUsed((prev) => ({
       ...prev,
-      [currentQuestion.question_id]: currentHints + 1,
+      [qid]: Math.max(1, prev[qid] || 1),
     }))
-    setShowHintNotice(true)
+  }
+
+  function getHintForQuestion(q: QuizQuestion): string {
+    const skill = (q.skill_id || '').toLowerCase()
+    const promptLower = (q.prompt || '').toLowerCase()
+
+    if (skill.includes('range-bounds') || promptLower.includes('range(')) {
+      return 'Notice the arguments to range(start, stop[, step]). In Python, range(stop) begins at 0 and stops before reaching stop.'
+    }
+    if (skill.includes('accumulator') || promptLower.includes('total') || promptLower.includes('count')) {
+      return 'Trace the accumulator variable initial value before the loop and inspect how its state changes on every iteration.'
+    }
+    if (skill.includes('nested-loops') || promptLower.includes('outer') || promptLower.includes('inner')) {
+      return 'Trace execution systematically: the outer loop advances one step only after the inner loop finishes all its cycles.'
+    }
+    if (skill.includes('list-traversal') || promptLower.includes('for item in') || promptLower.includes('len(')) {
+      return 'Check whether the loop accesses items directly or relies on numeric indices.'
+    }
+    if (q.skill_id) {
+      return `Practice guidance for ${q.skill_id.replace(/-/g, ' ')}: Trace variable values step by step through each iteration before selecting an answer.`
+    }
+    return 'Practice guidance: Trace variable values step by step through each iteration before selecting an answer.'
   }
 
   async function handleSubmit() {
@@ -66,6 +93,16 @@ export function QuizPlayer({
     setSubmissionError('')
 
     try {
+      let activeRevision = currentRevision
+      try {
+        const freshProfile = await api<Profile>('/me')
+        if (freshProfile && typeof freshProfile.input_revision === 'number') {
+          activeRevision = freshProfile.input_revision
+        }
+      } catch {
+        // Fall back to currentRevision if network fails
+      }
+
       const items = questions.map((q) => ({
         question_id: q.question_id,
         selected_option: answers[q.question_id],
@@ -75,7 +112,7 @@ export function QuizPlayer({
       const receipt = await submitAttemptBatch(
         goalId,
         {
-          expected_revision: currentRevision,
+          expected_revision: activeRevision,
           items,
         },
         idempotencyKey
@@ -168,13 +205,16 @@ export function QuizPlayer({
               style={{ fontSize: '13px', padding: '6px 12px', minHeight: '34px' }}
             >
               <HelpCircle size={15} aria-hidden="true" />
-              {hintsUsed[currentQuestion.question_id]
-                ? `Hints used on this question: ${hintsUsed[currentQuestion.question_id]}`
+              {revealedHints[currentQuestion.question_id]
+                ? 'Hint revealed (supported attempt)'
                 : 'Need a hint?'}
             </Button>
-            {showHintNotice && (
-              <p className="field-help" style={{ marginTop: '8px' }}>
-                Practice hint: Consider boundary limits and zero-based indexing. Note that using hints records this question as supported practice rather than independent evidence.
+            {revealedHints[currentQuestion.question_id] && (
+              <p className="field-help" style={{ marginTop: '8px', color: 'var(--dp-color-ink)' }}>
+                <strong>Hint:</strong> {getHintForQuestion(currentQuestion)}
+                <span style={{ display: 'block', fontSize: '12px', color: 'var(--dp-color-ink-secondary)', marginTop: '4px' }}>
+                  Note: Revealing a hint records this item as supported practice rather than independent mastery evidence.
+                </span>
               </p>
             )}
           </div>

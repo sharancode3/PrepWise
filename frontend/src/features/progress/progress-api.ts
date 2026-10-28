@@ -9,6 +9,7 @@ import type {
 } from './types'
 
 export interface QuestionsQueryOptions {
+  topic_id?: string
   skill_id?: string
   form?: 'baseline' | 'followup' | 'practice'
   difficulty?: number
@@ -27,6 +28,7 @@ export async function fetchQuestions(
   options: QuestionsQueryOptions = {}
 ): Promise<QuestionsApiResponse> {
   const params = new URLSearchParams()
+  if (options.topic_id) params.set('topic_id', options.topic_id)
   if (options.skill_id) params.set('skill_id', options.skill_id)
   if (options.form) params.set('form', options.form)
   if (options.difficulty !== undefined) params.set('difficulty', String(options.difficulty))

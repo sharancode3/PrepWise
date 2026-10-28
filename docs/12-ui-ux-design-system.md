@@ -82,7 +82,7 @@ Date constraints and errors are inline and associated by aria-describedby. Keep 
 
 ### Plan/study/progress/changes
 
-Provide loading, empty, error, ready, stale and degraded content states. Plan distinguishes full/partial/no_capacity with words plus numeric details; never color alone. Activity provenance and sources stay inspectable. Evidence uses counts and an unknown/limited label. A completion control never says mastery. Comparison explains changes before export.
+Provide loading, empty, error, ready, stale and degraded content states. Plan distinguishes full/partial/no_capacity with words plus numeric details; never color alone. Activity provenance and sources stay inspectable. Evidence uses counts and an unknown/limited label. A completion control never says mastery. Comparison shows factual before/after changes and saved reason/evidence references before export; Member 1 supplies explanation wording.
 
 Foundation route states must name the pending capability honestly and offer navigation back to setup/curriculum; they should not look like a broken blank page.
 
@@ -109,3 +109,7 @@ Check real rendered widths around 1440, 1050, 760, 480 and 375px, including keyb
 Every feature handback includes its route, semantic states, shared primitives used, screenshots at desktop/mobile and passing functional checks. Avoid unrelated photography. A useful coded product diagram is preferred to stock art for this foundation.
 
 This document supersedes prior statements that UI/UX/frontend are pending. Other documents are updated to point here. Changes to this visual language require owner direction; feature owners must follow it consistently.
+
+## Owner's subsequent workspace/navigation direction
+
+Use a persistent left sidebar for the desktop student workspace and an accessible drawer on mobile. The workspace is composed of distinct feature pages; its main navigation is not a horizontal header. Do not automatically select the first seeded curriculum or make Python the mandatory starting point. First-time and returning flows, resource entry, optional confirmed timetable import and teammate integration are specified in [document 14](14-student-flow-integration-direction.md). That direction supersedes earlier navigation layout assumptions while preserving this document's visual tokens.

@@ -44,6 +44,7 @@ class ProgressRepository:
         session: Session,
         curriculum_id: str,
         student_id: str,
+        topic_id: str | None = None,
         skill_id: str | None = None,
         form: str | None = None,
         difficulty: int | None = None,
@@ -57,6 +58,8 @@ class ProgressRepository:
             T["skills"].c.curriculum_id == curriculum_id,
             T["questions"].c.reviewed == 1,
         ]
+        if topic_id is not None:
+            base_filters.append(T["skills"].c.topic_id == topic_id)
         if skill_id is not None:
             base_filters.append(T["questions"].c.skill_id == skill_id)
         if form is not None:
@@ -90,6 +93,38 @@ class ProgressRepository:
 
         if unseen_rows:
             return unseen_rows, False
+
+        # If strict difficulty filter returned no unseen rows, relax difficulty filter
+        # so student can practice remaining available questions for the selected skill/curriculum
+        if difficulty is not None:
+            relaxed_filters = [
+                T["skills"].c.curriculum_id == curriculum_id,
+                T["questions"].c.reviewed == 1,
+            ]
+            if topic_id is not None:
+                relaxed_filters.append(T["skills"].c.topic_id == topic_id)
+            if skill_id is not None:
+                relaxed_filters.append(T["questions"].c.skill_id == skill_id)
+            if form is not None:
+                relaxed_filters.append(T["questions"].c.form == form)
+
+            relaxed_query = (
+                select(
+                    T["questions"].c.id.label("question_id"),
+                    T["questions"].c.skill_id,
+                    T["questions"].c.prompt,
+                    T["questions"].c.options_json,
+                    T["questions"].c.difficulty,
+                    T["questions"].c.form,
+                )
+                .select_from(T["questions"].join(T["skills"], T["questions"].c.skill_id == T["skills"].c.id))
+                .where(*relaxed_filters, T["questions"].c.id.not_in(attempted_subq))
+                .order_by(func.abs(T["questions"].c.difficulty - difficulty).asc(), T["questions"].c.id.asc())
+                .limit(limit)
+            )
+            relaxed_rows = [dict(r) for r in session.execute(relaxed_query).mappings()]
+            if relaxed_rows:
+                return relaxed_rows, False
 
         # If no unseen items exist, check if ANY reviewed questions match the filters to indicate exhaustion
         any_matching_query = (
