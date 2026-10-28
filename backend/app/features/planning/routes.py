@@ -18,6 +18,11 @@ router = APIRouter(tags=["planning"])
 T = Base.metadata.tables
 
 
+def stored_work_item_id(goal_id: str, work_item_id: str) -> str:
+    """Scope stable scheduler IDs to the goal for the globally keyed persistence table."""
+    return f"{goal_id}:{work_item_id}"
+
+
 def goal_response(session, goal_id, student_id):
     row = dict(owned_goal(session, goal_id, student_id))
     row["goal_id"] = row.pop("id")
@@ -94,11 +99,14 @@ def create_plan_job(goal_id: str, body: PlanJobCreate, student=Depends(current_s
     revision = session.execute(select(T["students"].c.input_revision).where(T["students"].c.id == student["id"])).scalar_one()
     if body.expected_revision != revision:
         raise AppError("STALE_REVISION", "Your study details changed. Refresh them and try again.", 409)
-    if body.mode == "replan" and body.base_plan_id:
-        base = session.execute(select(T["plan_versions"]).where(T["plan_versions"].c.id == body.base_plan_id, T["plan_versions"].c.goal_id == goal_id)).first()
+    if body.mode == "replan":
+        if not body.base_plan_id:
+            raise AppError("INPUT_INVALID", "Choose the active plan version to replan.", 422)
+        base = session.execute(select(T["plan_versions"]).where(T["plan_versions"].c.id == body.base_plan_id, T["plan_versions"].c.goal_id == goal_id, T["plan_versions"].c.status == "active")).first()
         if not base:
-            raise AppError("PLAN_NOT_FOUND", "Choose a plan version from this goal to replan.", 404)
-    completed = set(session.execute(select(T["progress_events"].c.work_item_id).where(T["progress_events"].c.goal_id == goal_id, T["progress_events"].c.event_type == "completed")).scalars())
+            raise AppError("PLAN_NOT_FOUND", "Only the active plan version can be replanned.", 404)
+    completed_prefix = f"{goal_id}:"
+    completed = {item_id.removeprefix(completed_prefix) for item_id in session.execute(select(T["progress_events"].c.work_item_id).where(T["progress_events"].c.goal_id == goal_id, T["progress_events"].c.event_type == "completed")).scalars()}
     planning_input = PlanningInput(
         goal_id=goal_id, curriculum_id=goal["curriculum_id"], start_date=goal["start_date"], deadline=goal["deadline"],
         targets=[dict(x) for x in session.execute(select(T["goal_topics"].c.topic_id, T["goal_topics"].c.self_report).where(T["goal_topics"].c.goal_id == goal_id)).mappings()],
@@ -115,13 +123,13 @@ def create_plan_job(goal_id: str, body: PlanJobCreate, student=Depends(current_s
     reason = "Replanned after your availability or deadline changed." if body.mode == "replan" else "Generated from your study details."
     session.execute(T["plan_versions"].insert().values(id=result.plan_id, goal_id=goal_id, parent_plan_id=body.base_plan_id or (old_active["id"] if old_active else None), version=version + 1, status="active", input_revision=revision, algorithm_version=result.algorithm_version, policy_version="prototype-v1", feasibility=result.feasibility.outcome.value.lower(), generation_status="generated", config_json=json.dumps({"reason": reason}), metrics_json=json.dumps(result.metrics), deferred_json=json.dumps([{"work_item_id": x.work_item_id, "topic_id": x.topic_id, "remaining_minutes": x.duration_minutes, "reason_code": "CAPACITY_OR_DEADLINE"} for x in result.unscheduled_work_items]), assumptions_json=json.dumps(["Uses recorded completed work when available."]), input_snapshot_json=json.dumps(planning_input.model_dump(mode="json")), snapshot_hash=str(uuid4())))
     for item in result.unscheduled_work_items:
-        session.execute(T["work_items"].insert().prefix_with("OR IGNORE").values(id=item.work_item_id, goal_id=goal_id, curriculum_id=goal["curriculum_id"], topic_id=item.topic_id, skill_id=None, kind=item.kind, unit_key=item.unit_key, base_minutes=item.duration_minutes, state=item.status))
+        session.execute(T["work_items"].insert().prefix_with("OR IGNORE").values(id=stored_work_item_id(goal_id, item.work_item_id), goal_id=goal_id, curriculum_id=goal["curriculum_id"], topic_id=item.topic_id, skill_id=None, kind=item.kind, unit_key=item.unit_key, base_minutes=item.duration_minutes, state=item.status))
     for item_id in result.scheduled_work_item_ids:
         # sessions carry the authoritative work-item metadata; it is persisted below.
         session_row = next(s for s in result.sessions if s.work_item_id == item_id)
-        session.execute(T["work_items"].insert().prefix_with("OR IGNORE").values(id=item_id, goal_id=goal_id, curriculum_id=goal["curriculum_id"], topic_id=session_row.topic_id, skill_id=None, kind=session_row.activity_kind, unit_key=item_id, base_minutes=session_row.duration_minutes, state="pending"))
+        session.execute(T["work_items"].insert().prefix_with("OR IGNORE").values(id=stored_work_item_id(goal_id, item_id), goal_id=goal_id, curriculum_id=goal["curriculum_id"], topic_id=session_row.topic_id, skill_id=None, kind=session_row.activity_kind, unit_key=item_id, base_minutes=session_row.duration_minutes, state="pending"))
     for item in result.sessions:
-        session.execute(T["plan_entries"].insert().values(id=str(uuid4()), goal_id=goal_id, plan_id=result.plan_id, work_item_id=item.work_item_id, study_date=item.date.isoformat(), sequence=item.sequence, duration_minutes=item.duration_minutes, reason_code=item.reason_code, reason_details_json=json.dumps(item.reason_details), activity_json=json.dumps({"title": item.title, "origin": "scheduler"})))
+        session.execute(T["plan_entries"].insert().values(id=str(uuid4()), goal_id=goal_id, plan_id=result.plan_id, work_item_id=stored_work_item_id(goal_id, item.work_item_id), study_date=item.date.isoformat(), sequence=item.sequence, duration_minutes=item.duration_minutes, reason_code=item.reason_code, reason_details_json=json.dumps(item.reason_details), activity_json=json.dumps({"title": item.title, "origin": "scheduler"})))
     session.commit()
     return {"plan_id": result.plan_id, "status": "completed", "mode": body.mode}
 

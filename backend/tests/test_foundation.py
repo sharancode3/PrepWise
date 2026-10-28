@@ -89,12 +89,29 @@ def test_validation_and_stale_revision(foundation):
     assert all(row['minutes']==0 for row in update_result.json()['availability'])
 
 
-def test_unbuilt_features_are_honest_and_jobs_recover(foundation):
+def test_planning_flow_versions_and_jobs_recover(foundation):
     client,db=foundation
     headers,student=identity(client)
     saved=client.post('/api/v1/goals',headers=headers,json=goal()).json()
     result=client.post('/api/v1/goals/'+saved['goal_id']+'/plan-jobs',headers=headers,json={'expected_revision':1,'mode':'generate'})
-    assert result.status_code==501
+    assert result.status_code==202,result.text
+    first_plan=result.json()['plan_id']
+    current=client.get('/api/v1/goals/'+saved['goal_id']+'/plans/current',headers=headers)
+    assert current.status_code==200,current.text
+    assert current.json()['plan_id']==first_plan
+    assert current.json()['entries']
+    availability_update=client.put('/api/v1/goals/'+saved['goal_id']+'/availability',headers={**headers,'Idempotency-Key':str(uuid4())},json={'expected_revision':1,'availability':[]})
+    assert availability_update.status_code==200,availability_update.text
+    revised=client.post('/api/v1/goals/'+saved['goal_id']+'/plan-jobs',headers=headers,json={'expected_revision':2,'mode':'replan','base_plan_id':first_plan})
+    assert revised.status_code==202,revised.text
+    plans=client.get('/api/v1/goals/'+saved['goal_id']+'/plans',headers=headers).json()
+    assert len(plans)==2
+    assert plans[0]['is_active'] is True
+    assert client.get('/api/v1/plans/'+first_plan,headers=headers).status_code==200
+    other_headers,_=identity(client)
+    other_goal=client.post('/api/v1/goals',headers=other_headers,json=goal()).json()
+    other_plan=client.post('/api/v1/goals/'+other_goal['goal_id']+'/plan-jobs',headers=other_headers,json={'expected_revision':1,'mode':'generate'})
+    assert other_plan.status_code==202,other_plan.text
     table=Base.metadata.tables['jobs']
     with db.sessions.begin() as session:
         session.execute(table.insert().values(id='queued-job',student_id=student['student_id'],goal_id=saved['goal_id'],mode='generate',status='queued',stage='accepted',accepted_revision=1,request_id='test'))

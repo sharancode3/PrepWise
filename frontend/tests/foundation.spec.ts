@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('welcome, real setup and honest feature handoff', async ({ page }, testInfo) => {
+test('welcome, setup and generated plan', async ({ page }, testInfo) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: /make room/i })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
@@ -9,12 +9,14 @@ test('welcome, real setup and honest feature handoff', async ({ page }, testInfo
   await page.getByLabel(/your name/i).fill('Foundation check')
   await page.getByLabel('Goal title').fill('Trace loops independently')
   await page.getByLabel('Loops', {exact:true}).check()
-  await page.getByRole('button', {name:'Save my learning goal'}).click()
+  await page.getByRole('button', {name:'Create my learning plan'}).click()
   await expect(page.getByText('Your goal is saved.')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
   await page.screenshot({ path: testInfo.outputPath('setup-saved.png'), fullPage:true })
   await page.getByRole('link', {name:'Open my plan'}).click()
-  await expect(page.getByText(/feature implementation pending/i)).toBeVisible()
+  await expect(page.getByRole('heading', { name: /a plan for the time/i })).toBeVisible()
+  await expect(page.getByText(/available/i).first()).toBeVisible()
+  await expect(page.getByText(/plan history/i)).toBeVisible()
 })
 
 test('keyboard focus and reduced-motion preference', async ({page})=>{

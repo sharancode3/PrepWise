@@ -111,6 +111,26 @@ cd ../backend
 
 The full backend suite has one obsolete foundation-test assertion that expects `/plan-jobs` to return HTTP 501; the endpoint now intentionally returns HTTP 202.
 
+### Completed final integration and testing pass
+
+- Scoped persisted scheduler work-item IDs by goal. Stable scheduler IDs are still passed to the GA engine, while database IDs no longer collide when two learners plan the same curriculum.
+- Replanning now requires and uses the active plan version; viewing an older version cannot accidentally make it the replan parent.
+- Updated the planning capability response to advertise the delivered prototype correctly.
+- Replaced the obsolete "planning pending" browser expectation with generated-plan assertions, and expanded the API integration test through initial generation, availability update, zero-capacity replan, historical version retrieval, and a second learner's plan.
+
+Final verification:
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m pytest # 28 passed (one third-party deprecation warning)
+
+cd ../frontend
+npm.cmd run build # passed
+npx.cmd playwright test --project=desktop --reporter=line # 2 passed
+```
+
+`npm.cmd run test:e2e` remains environment-sensitive when Playwright uses its reused local database/server: its desktop and mobile generated-plan cases can receive a generic `DATABASE_CONFLICT`; the focused clean browser run and all API integration tests pass. This is the remaining test-environment issue to investigate, not a deliberately suppressed application error.
+
 1. **Plan Persistence & Versioning**:
    - Save candidate schedules into SQLite tables `plan_versions`, `plan_entries`, and `work_items` using `JobRunner.complete()` when activated.
 2. **Background Job Wiring**:
