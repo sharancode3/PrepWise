@@ -144,7 +144,9 @@ class ProgressRepository:
                 T["attempts"].c.hints_used,
                 T["attempts"].c.is_independent_evidence,
                 T["attempts"].c.submitted_at,
+                T["questions"].c.form,
             )
+            .select_from(T["attempts"].join(T["questions"], T["attempts"].c.question_id == T["questions"].c.id))
             .where(
                 T["attempts"].c.student_id == student_id,
                 T["attempts"].c.skill_id == skill_id,

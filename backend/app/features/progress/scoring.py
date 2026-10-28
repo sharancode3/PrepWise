@@ -75,7 +75,7 @@ def compute_skill_evidence(skill_id: str, attempts: list[dict[str, Any]], window
         evidence_status = "limited"
     elif estimate <= 0.40:
         evidence_status = "needs_attention"
-    elif n >= 4 and estimate >= 0.80:
+    elif n >= 4 and estimate >= 0.80 and any(a.get("form") == "followup" for a in window):
         evidence_status = "strong"
     else:
         evidence_status = "ordinary"
@@ -90,3 +90,9 @@ def compute_skill_evidence(skill_id: str, attempts: list[dict[str, Any]], window
         "evidence_status": evidence_status,
         "attempt_ids": attempt_ids,
     }
+
+
+def project_skill_evidence(skill_id: str, attempts: list[dict[str, Any]], window_size: int = 8) -> dict[str, Any]:
+    """Public alias for skill evidence projection following the approved Policy v1."""
+    return compute_skill_evidence(skill_id, attempts, window_size)
+

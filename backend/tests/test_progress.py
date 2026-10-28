@@ -450,6 +450,44 @@ def test_empty_learning_state_returns_honest_unknown_and_null(progress_env):
         assert skill["attempt_ids"] == []
 
 
+def test_stage2_evidence_formula_thresholds_and_window():
+    """Test pure deterministic skill projection: empty, 1 correct + 2 incorrect, and latest-8 window."""
+    from app.features.progress.scoring import project_skill_evidence
+
+    # 1. No evidence -> unknown and None
+    res_empty = project_skill_evidence("test-skill", [])
+    assert res_empty["performance_estimate"] is None
+    assert res_empty["evidence_status"] == "unknown"
+    assert res_empty["attempt_ids"] == []
+
+    # 2. 1 correct + 2 incorrect (n=3, c=1, w=2) -> alpha=2, beta=3 -> estimate=0.40 -> needs_attention
+    attempts_na = [
+        {"id": "a1", "correct": 1, "is_independent_evidence": 1, "submitted_at": "2026-10-28T01:00:00Z"},
+        {"id": "a2", "correct": 0, "is_independent_evidence": 1, "submitted_at": "2026-10-28T02:00:00Z"},
+        {"id": "a3", "correct": 0, "is_independent_evidence": 1, "submitted_at": "2026-10-28T03:00:00Z"},
+    ]
+    res_na = project_skill_evidence("test-skill", attempts_na)
+    assert res_na["performance_estimate"] == 0.40
+    assert res_na["evidence_status"] == "needs_attention"
+    assert res_na["independent_count"] == 3
+
+    # 3. Latest 8 window: 2 old incorrect items + 8 new correct items (with followup form)
+    # The 2 old items must be excluded from the window of 8
+    attempts_10 = [
+        {"id": f"old-{i}", "correct": 0, "is_independent_evidence": 1, "submitted_at": f"2026-10-28T00:0{i}:00Z"}
+        for i in range(2)
+    ] + [
+        {"id": f"new-{i}", "correct": 1, "is_independent_evidence": 1, "submitted_at": f"2026-10-28T01:0{i}:00Z", "form": "followup" if i == 0 else "baseline"}
+        for i in range(8)
+    ]
+    res_10 = project_skill_evidence("test-skill", attempts_10)
+    assert len(res_10["attempt_ids"]) == 8
+    assert res_10["attempt_ids"] == [f"new-{i}" for i in range(8)]
+    assert res_10["performance_estimate"] == 0.90
+    assert res_10["evidence_status"] == "strong"
+
+
+
 # ==============================================================================
 # PROGRESS EVENTS (PARTICIPATION) TESTS
 # ==============================================================================

@@ -4,6 +4,7 @@ from app.features.progress.scoring import (
     classify_evidence,
     compute_skill_evidence,
     normalize_choice,
+    project_skill_evidence,
     score_single_choice,
     validate_selected_option,
 )
@@ -14,6 +15,8 @@ __all__ = [
     "classify_evidence",
     "compute_skill_evidence",
     "normalize_choice",
+    "project_skill_evidence",
     "score_single_choice",
     "validate_selected_option",
 ]
+
